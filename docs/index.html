@@ -4,51 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Screen Translator</title>
-  <meta name="description" content="macOS 屏幕翻译工具 — 一键截屏、OCR、翻译、像素级覆盖">
+  <meta name="description" content="macOS 屏幕翻译工具 — 任何应用，一键汉化">
   <link rel="icon" type="image/png" href="icon.png">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --fg:#171717;--fg-2:#666;--fg-3:#888;
-      --bg:#fff;--bg-alt:#fafafa;
-      --border:rgba(0,0,0,0.08);--border-light:#ebebeb;
-      --accent:#171717;--accent-fg:#fff;
-      --link:#0072f5;
-      --shadow-ring:0 0 0 1px var(--border);
-      --shadow-card:0 0 0 1px var(--border),0 2px 4px rgba(0,0,0,0.04),0 8px 16px -8px rgba(0,0,0,0.04);
-    }
-    @media(prefers-color-scheme:dark){
-      :root{
-        --fg:#ededed;--fg-2:#a1a1a6;--fg-3:#6e6e73;
-        --bg:#0a0a0a;--bg-alt:#111;
-        --border:rgba(255,255,255,0.1);--border-light:#222;
-        --accent:#ededed;--accent-fg:#0a0a0a;
-        --link:#3b9eff;
-        --shadow-ring:0 0 0 1px var(--border);
-        --shadow-card:0 0 0 1px var(--border),0 2px 4px rgba(0,0,0,0.2);
-      }
+      --fg:#f0f0f0;--fg-2:#999;--fg-3:#666;
+      --bg:#0a0a0a;--bg-alt:#111;
+      --border:rgba(255,255,255,0.08);--border-light:#1a1a1a;
+      --accent:#3b82f6;--accent-glow:rgba(59,130,246,0.15);
+      --glass:rgba(255,255,255,0.04);
     }
     body{
       font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC',sans-serif;
       background:var(--bg);color:var(--fg);
       -webkit-font-smoothing:antialiased;line-height:1.5;
     }
-    a{color:var(--link);text-decoration:none}
+    a{color:var(--accent);text-decoration:none}
     a:hover{text-decoration:underline}
 
     /* Nav */
     .nav{
       position:sticky;top:0;z-index:50;
-      background:rgba(255,255,255,0.8);
+      background:rgba(10,10,10,0.75);
       backdrop-filter:saturate(180%) blur(20px);
       -webkit-backdrop-filter:saturate(180%) blur(20px);
-      border-bottom:1px solid var(--border-light);
-    }
-    @media(prefers-color-scheme:dark){
-      .nav{background:rgba(10,10,10,0.8)}
+      border-bottom:1px solid var(--border);
     }
     .nav-inner{
-      max-width:1024px;margin:0 auto;height:48px;padding:0 24px;
+      max-width:1100px;margin:0 auto;height:48px;padding:0 24px;
       display:flex;align-items:center;justify-content:space-between;
     }
     .nav-brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--fg);text-decoration:none}
@@ -56,105 +40,222 @@
     .nav-r{display:flex;align-items:center;gap:20px;font-size:13px}
     .nav-r a{color:var(--fg-2)}
     .nav-r a:hover{color:var(--fg);text-decoration:none}
-    .lang-btn{
-      background:none;border:1px solid var(--border-light);color:var(--fg-3);
-      padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;
-    }
     .nav-dl{
-      background:var(--accent);color:var(--accent-fg)!important;
-      padding:4px 12px;border-radius:5px;font-size:12px;font-weight:600;
+      background:var(--accent);color:#fff!important;
+      padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;
+      transition:box-shadow .2s;
     }
-    .nav-dl:hover{opacity:0.85;text-decoration:none!important}
+    .nav-dl:hover{box-shadow:0 0 20px var(--accent-glow);text-decoration:none!important}
+    .lang-btn{
+      background:none;border:1px solid rgba(255,255,255,0.12);color:var(--fg-3);
+      padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;
+    }
     .lang-btn:hover{border-color:var(--fg-3);color:var(--fg-2)}
 
     /* Hero */
     .hero{
-      max-width:1024px;margin:0 auto;
-      padding:120px 24px 80px;text-align:center;
+      max-width:1100px;margin:0 auto;
+      padding:72px 24px 24px;text-align:center;
     }
     .hero h1{
-      font-size:56px;font-weight:700;
-      letter-spacing:-2.8px;line-height:1.05;
+      font-size:44px;font-weight:700;
+      letter-spacing:-2px;line-height:1.1;
       margin-bottom:16px;
+      background:linear-gradient(135deg,#fff 0%,#999 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
     }
-    .hero .sub{
-      font-size:18px;color:var(--fg-2);line-height:1.7;
-      max-width:460px;margin:0 auto 36px;
+    .hero .pain{
+      font-size:16px;color:var(--fg-2);line-height:1.7;
+      max-width:520px;margin:0 auto 12px;
     }
-    .hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-    .btn{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:10px 20px;border-radius:6px;
-      font-size:14px;font-weight:500;border:none;cursor:pointer;
-      text-decoration:none;transition:opacity .15s;
+    .hero .pain strong{color:var(--fg);font-weight:600}
+    .hero .solution{
+      font-size:14px;color:var(--accent);font-weight:500;
+      margin-bottom:32px;
     }
-    .btn:hover{text-decoration:none;opacity:0.85}
-    .btn-dark{background:var(--accent);color:var(--accent-fg)}
-    .btn-ghost{background:transparent;color:var(--fg);box-shadow:var(--shadow-ring)}
+    @media(max-width:600px){
+      .hero{padding:56px 20px 20px}
+      .hero h1{font-size:28px;letter-spacing:-1px}
+    }
+
+    /* Demo */
+    .demo-sec{max-width:1100px;margin:0 auto 48px;padding:0 16px}
+    .demo-outer{
+      border-radius:14px;overflow:hidden;
+      border:1px solid rgba(255,255,255,0.06);
+      background:linear-gradient(180deg,rgba(255,255,255,0.03) 0%,transparent 100%);
+      padding:1px;
+    }
+    .demo-window{
+      position:relative;width:100%;
+      border-radius:13px;overflow:hidden;
+      background:#1e1e1e;color:#ccc;font-size:13px;
+      display:grid;grid-template-columns:156px 1fr;grid-template-rows:auto 1fr;
+    }
+    .demo-titlebar{
+      grid-column:1/-1;display:flex;align-items:center;
+      padding:10px 14px;background:#2d2d2d;gap:8px;
+    }
+    .dt-dots{display:flex;gap:6px}
+    .dt-dots span{width:10px;height:10px;border-radius:50%}
+    .dt-dots span:nth-child(1){background:#ff5f57}
+    .dt-dots span:nth-child(2){background:#febc2e}
+    .dt-dots span:nth-child(3){background:#28c840}
+    .dt-title{flex:1;text-align:center;font-size:12px;color:#888;margin-right:48px}
+
+    .demo-sidebar{
+      padding:12px 0;background:#252526;border-right:1px solid #333;
+      display:flex;flex-direction:column;gap:0;
+    }
+    .demo-sb-item{padding:7px 16px;font-size:13px;position:relative;overflow:hidden}
+    .ds-active{background:#37373d}
+    .demo-sb-item .d-orig,.demo-sb-item .d-trans{display:block}
+    .demo-sb-item .d-trans{position:absolute;left:16px;top:7px;opacity:0;transition:opacity .35s}
+    .demo-sb-item .d-orig{transition:opacity .35s}
+
+    .demo-content{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
+    .dc-title{font-size:16px;font-weight:600;color:#e0e0e0;margin-bottom:4px;position:relative;overflow:hidden;line-height:1.6}
+    .demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative}
+    .demo-row .d-label{position:relative;overflow:hidden;line-height:1.6}
+    .demo-row .d-orig,.demo-row .d-trans{display:block}
+    .demo-row .d-trans{position:absolute;left:0;top:0;opacity:0;transition:opacity .35s}
+    .demo-row .d-orig{transition:opacity .35s}
+    .dc-title .d-orig,.dc-title .d-trans{display:block}
+    .dc-title .d-trans{position:absolute;left:0;top:0;opacity:0;transition:opacity .35s}
+    .dc-title .d-orig{transition:opacity .35s}
+    .demo-select{
+      padding:4px 10px;border-radius:4px;background:#3c3c3c;border:1px solid #555;
+      font-size:12px;color:#ccc;white-space:nowrap;flex-shrink:0;
+    }
+    .demo-toggle{
+      width:32px;height:18px;border-radius:9px;position:relative;flex-shrink:0;
+    }
+    .demo-toggle.on{background:#0072f5}
+    .demo-toggle.off{background:#555}
+    .demo-toggle::after{
+      content:'';position:absolute;top:2px;
+      width:14px;height:14px;border-radius:50%;background:#fff;
+    }
+    .demo-toggle.on::after{left:16px}
+    .demo-toggle.off::after{left:2px}
+
+    /* Demo toast */
+    .demo-toast{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.95);
+      background:rgba(0,0,0,0.88);color:#fff;
+      padding:10px 24px;border-radius:10px;
+      font-size:13px;font-weight:500;
+      opacity:0;transition:opacity .25s,transform .25s;
+      pointer-events:none;z-index:5;
+      box-shadow:0 4px 24px rgba(0,0,0,0.5);
+    }
+    .demo-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+    /* Demo trigger button */
+    .demo-trigger{
+      display:flex;align-items:center;justify-content:center;gap:12px;
+      margin-top:16px;
+    }
+    .demo-btn{
+      background:transparent;color:var(--fg-2);
+      border:1px solid rgba(255,255,255,0.1);
+      padding:8px 20px;border-radius:8px;
+      font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;
+      display:flex;align-items:center;gap:8px;
+      transition:all .2s;
+    }
+    .demo-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 20px var(--accent-glow)}
+    .demo-btn.active{border-color:var(--accent);color:var(--accent);pointer-events:none}
+    .demo-btn .keys{display:flex;gap:3px}
+    .demo-btn kbd{
+      padding:2px 6px;border-radius:3px;
+      background:rgba(255,255,255,0.06);
+      font-family:inherit;font-size:11px;font-weight:600;
+    }
+
+    @media(max-width:500px){
+      .demo-window{grid-template-columns:1fr}
+      .demo-sidebar{display:none}
+    }
+
+    /* Translated state */
+    .demo-window.translated .d-orig{opacity:0}
+    .demo-window.translated .d-trans{opacity:1}
+    .demo-window.translated .demo-sb-item:nth-child(1) .d-trans,.demo-window.translated .demo-sb-item:nth-child(1) .d-orig{transition-delay:0s}
+    .demo-window.translated .demo-sb-item:nth-child(2) .d-trans,.demo-window.translated .demo-sb-item:nth-child(2) .d-orig{transition-delay:.04s}
+    .demo-window.translated .demo-sb-item:nth-child(3) .d-trans,.demo-window.translated .demo-sb-item:nth-child(3) .d-orig{transition-delay:.08s}
+    .demo-window.translated .demo-sb-item:nth-child(4) .d-trans,.demo-window.translated .demo-sb-item:nth-child(4) .d-orig{transition-delay:.12s}
+    .demo-window.translated .demo-sb-item:nth-child(5) .d-trans,.demo-window.translated .demo-sb-item:nth-child(5) .d-orig{transition-delay:.16s}
+    .demo-window.translated .dc-title .d-trans,.demo-window.translated .dc-title .d-orig{transition-delay:0s}
+    .demo-window.translated .demo-row:nth-child(2) .d-trans,.demo-window.translated .demo-row:nth-child(2) .d-orig{transition-delay:.05s}
+    .demo-window.translated .demo-row:nth-child(3) .d-trans,.demo-window.translated .demo-row:nth-child(3) .d-orig{transition-delay:.1s}
+    .demo-window.translated .demo-row:nth-child(4) .d-trans,.demo-window.translated .demo-row:nth-child(4) .d-orig{transition-delay:.15s}
+    .demo-window.translated .demo-row:nth-child(5) .d-trans,.demo-window.translated .demo-row:nth-child(5) .d-orig{transition-delay:.2s}
+    .demo-window.translated .demo-row:nth-child(6) .d-trans,.demo-window.translated .demo-row:nth-child(6) .d-orig{transition-delay:.25s}
+    .demo-window.translated .demo-row:nth-child(7) .d-trans,.demo-window.translated .demo-row:nth-child(7) .d-orig{transition-delay:.3s}
+    .demo-window.translated .demo-row:nth-child(8) .d-trans,.demo-window.translated .demo-row:nth-child(8) .d-orig{transition-delay:.35s}
 
     /* Pipeline */
     .pipeline{
-      max-width:640px;margin:0 auto 80px;
+      max-width:700px;margin:0 auto 48px;
       display:flex;align-items:center;justify-content:center;
       gap:0;padding:0 24px;
     }
-    .pipe-step{text-align:center;padding:8px 14px}
-    .pipe-step strong{display:block;font-size:13px;font-weight:600;letter-spacing:-0.3px}
-    .pipe-step span{font-size:11px;color:var(--fg-3)}
-    .pipe-arr{color:var(--border-light);font-size:14px;margin-bottom:12px}
-    @media(max-width:600px){
-      .hero h1{font-size:36px;letter-spacing:-1.8px}
-      .pipe-arr{display:none}.pipeline{flex-wrap:wrap;gap:4px}
-    }
+    .pipe-step{text-align:center;padding:8px 12px}
+    .pipe-step strong{display:block;font-size:12px;font-weight:600;letter-spacing:-0.2px;color:var(--fg)}
+    .pipe-step span{font-size:10px;color:var(--fg-3)}
+    .pipe-arr{color:var(--fg-3);font-size:12px;margin-bottom:12px;opacity:0.4}
+    @media(max-width:600px){.pipe-arr{display:none}.pipeline{flex-wrap:wrap;gap:2px}}
+
+    /* Divider */
+    .divider{border:none;border-top:1px solid var(--border);max-width:1100px;margin:0 auto}
 
     /* Section */
-    .sec{max-width:1024px;margin:0 auto;padding:80px 24px}
-    .sec-head{text-align:center;margin-bottom:48px}
-    .sec-head h2{font-size:32px;font-weight:700;letter-spacing:-1.3px;margin-bottom:6px}
-    .sec-head p{font-size:15px;color:var(--fg-2)}
-    .divider{border:none;border-top:1px solid var(--border-light);max-width:1024px;margin:0 auto}
+    .sec{max-width:1100px;margin:0 auto;padding:64px 24px}
+    .sec-head{text-align:center;margin-bottom:40px}
+    .sec-head h2{font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:6px}
+    .sec-head p{font-size:14px;color:var(--fg-2)}
 
     /* Features */
-    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border-light);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-ring)}
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden}
     .feat{padding:28px;background:var(--bg)}
-    .feat h3{font-size:15px;font-weight:600;letter-spacing:-0.3px;margin-bottom:6px}
+    .feat:hover{background:var(--glass)}
+    .feat h3{font-size:14px;font-weight:600;letter-spacing:-0.2px;margin-bottom:6px}
     .feat p{font-size:13px;color:var(--fg-2);line-height:1.65}
     @media(max-width:700px){.feat-grid{grid-template-columns:1fr}}
 
     /* Providers */
-    .prov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border-light);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-ring)}
-    .prov{padding:24px 12px;background:var(--bg);text-align:center}
+    .prov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden}
+    .prov{padding:24px 12px;background:var(--bg);text-align:center;transition:background .2s}
+    .prov:hover{background:var(--glass)}
     .prov h4{font-size:14px;font-weight:600;margin-bottom:2px}
     .prov span{font-size:11px;color:var(--fg-3)}
     .prov .tag{
       display:inline-block;margin-top:8px;padding:2px 8px;border-radius:9999px;
       font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;
     }
-    .tag-f{background:#e8f5e9;color:#2e7d32}
-    .tag-k{background:#f3f4f6;color:#666}
-    @media(prefers-color-scheme:dark){
-      .tag-f{background:#14261a;color:#6fcf97}
-      .tag-k{background:#1a1a1a;color:#999}
-    }
+    .tag-f{background:#14261a;color:#6fcf97}
+    .tag-k{background:#1a1a1a;color:#888}
     @media(max-width:600px){.prov-grid{grid-template-columns:repeat(2,1fr)}}
 
     /* Shortcuts */
-    .sc-list{max-width:400px;margin:0 auto;display:flex;flex-direction:column;gap:1px;background:var(--border-light);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-ring)}
+    .sc-list{max-width:400px;margin:0 auto;display:flex;flex-direction:column;gap:1px;background:var(--border);border-radius:10px;overflow:hidden}
     .sc-row{
       display:flex;align-items:center;justify-content:space-between;
       padding:12px 20px;background:var(--bg);font-size:14px;
     }
-    .keys{display:flex;gap:4px}
-    .keys kbd{
+    .keys-show{display:flex;gap:4px}
+    .keys-show kbd{
       padding:2px 7px;border-radius:4px;
-      background:var(--bg-alt);box-shadow:var(--shadow-ring);
+      background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
       font-family:inherit;font-size:11px;font-weight:600;
     }
 
     /* Install */
     .inst{
       max-width:520px;margin:0 auto;
-      box-shadow:var(--shadow-card);border-radius:12px;
+      border:1px solid var(--border);border-radius:12px;
       overflow:hidden;
     }
     .inst-head{padding:20px 24px 0;font-size:14px;font-weight:600}
@@ -164,98 +265,13 @@
       font-family:'SF Mono',Menlo,monospace;
       font-size:13px;line-height:2;overflow-x:auto;white-space:pre;
     }
-    .code .c{color:#555}
-
-    /* Demo */
-    .demo-sec{max-width:1024px;margin:0 auto 80px;padding:0 24px}
-    .demo-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
-    .demo-window{
-      position:relative;width:100%;max-width:620px;
-      box-shadow:0 0 0 1px rgba(0,0,0,0.12),0 8px 40px rgba(0,0,0,0.08);
-      border-radius:10px;overflow:hidden;
-      background:#1e1e1e;color:#ccc;font-size:13px;
-      display:grid;grid-template-columns:160px 1fr;grid-template-rows:auto 1fr;
-    }
-    .demo-titlebar{
-      grid-column:1/-1;display:flex;align-items:center;
-      padding:8px 14px;background:#2d2d2d;gap:8px;
-    }
-    .dt-dots{display:flex;gap:6px}
-    .dt-dots span{width:10px;height:10px;border-radius:50%}
-    .dt-dots span:nth-child(1){background:#ff5f57}
-    .dt-dots span:nth-child(2){background:#febc2e}
-    .dt-dots span:nth-child(3){background:#28c840}
-    .dt-title{flex:1;text-align:center;font-size:12px;color:#999;margin-right:48px}
-    .dt-spacer{width:0}
-    .demo-sidebar{
-      padding:12px 0;background:#252526;border-right:1px solid #333;
-      display:flex;flex-direction:column;gap:1px;
-    }
-    .demo-sidebar .demo-line{padding:6px 16px;font-size:13px}
-    .ds-active{background:#37373d}
-    .demo-content{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
-    .dc-title{font-size:16px!important;font-weight:600;color:#e0e0e0;margin-bottom:4px}
-    .demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .demo-select{
-      padding:3px 10px;border-radius:4px;background:#3c3c3c;border:1px solid #555;
-      font-size:12px;color:#ccc;white-space:nowrap;
-    }
-    .demo-toggle{
-      width:32px;height:18px;border-radius:9px;background:#555;position:relative;
-    }
-    .demo-toggle.on{background:#0072f5}
-    .demo-toggle::after{
-      content:'';position:absolute;top:2px;left:2px;
-      width:14px;height:14px;border-radius:50%;background:#fff;
-      transition:left .2s;
-    }
-    .demo-toggle.on::after{left:16px}
-
-    .demo-line{position:relative;display:inline-flex;line-height:1.6}
-    .demo-orig{opacity:1;transition:opacity .3s}
-    .demo-trans{
-      position:absolute;left:0;top:0;
-      opacity:0;transition:opacity .3s;
-    }
-    .demo-toast{
-      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-      background:rgba(0,0,0,0.85);color:#fff;
-      padding:8px 20px;border-radius:8px;
-      font-size:13px;font-weight:500;
-      opacity:0;transition:opacity .3s;
-      pointer-events:none;white-space:nowrap;z-index:2;
-    }
-    .demo-hint{opacity:0.4;font-size:12px;color:var(--fg-3)}
-
-    @media(max-width:500px){
-      .demo-window{grid-template-columns:1fr;max-width:100%}
-      .demo-sidebar{display:none}
-    }
-
-    /* Animation */
-    .demo-window.phase-toast .demo-toast{opacity:1}
-    .demo-window.phase-done .demo-toast{opacity:0}
-    .demo-window.phase-done .demo-orig{opacity:0}
-    .demo-window.phase-done .demo-trans{opacity:1}
-    .demo-window.phase-done .dl-1 .demo-trans,.demo-window.phase-done .dl-1 .demo-orig{transition-delay:.0s}
-    .demo-window.phase-done .dl-2 .demo-trans,.demo-window.phase-done .dl-2 .demo-orig{transition-delay:.04s}
-    .demo-window.phase-done .dl-3 .demo-trans,.demo-window.phase-done .dl-3 .demo-orig{transition-delay:.08s}
-    .demo-window.phase-done .dl-4 .demo-trans,.demo-window.phase-done .dl-4 .demo-orig{transition-delay:.12s}
-    .demo-window.phase-done .dl-5 .demo-trans,.demo-window.phase-done .dl-5 .demo-orig{transition-delay:.16s}
-    .demo-window.phase-done .dl-6 .demo-trans,.demo-window.phase-done .dl-6 .demo-orig{transition-delay:.0s}
-    .demo-window.phase-done .dl-7 .demo-trans,.demo-window.phase-done .dl-7 .demo-orig{transition-delay:.06s}
-    .demo-window.phase-done .dl-8 .demo-trans,.demo-window.phase-done .dl-8 .demo-orig{transition-delay:.12s}
-    .demo-window.phase-done .dl-9 .demo-trans,.demo-window.phase-done .dl-9 .demo-orig{transition-delay:.18s}
-    .demo-window.phase-done .dl-10 .demo-trans,.demo-window.phase-done .dl-10 .demo-orig{transition-delay:.24s}
-    .demo-window.phase-done .dl-11 .demo-trans,.demo-window.phase-done .dl-11 .demo-orig{transition-delay:.30s}
-    .demo-window.phase-done .dl-12 .demo-trans,.demo-window.phase-done .dl-12 .demo-orig{transition-delay:.36s}
-    .demo-window.phase-done .dl-13 .demo-trans,.demo-window.phase-done .dl-13 .demo-orig{transition-delay:.42s}
+    .code .c{color:#444}
 
     /* Footer */
     .footer{
-      max-width:1024px;margin:0 auto;
+      max-width:1100px;margin:0 auto;
       padding:32px 24px;text-align:center;
-      border-top:1px solid var(--border-light);margin-top:60px;
+      border-top:1px solid var(--border);margin-top:40px;
     }
     .footer p{font-size:12px;color:var(--fg-3)}
   </style>
@@ -275,62 +291,44 @@
 </div></nav>
 
 <section class="hero">
-  <h1 data-i18n="h.t">一键翻译你的屏幕</h1>
-  <p class="sub" data-i18n="h.s">截屏、识别、翻译、覆盖 — 一气呵成。<br>像素级还原，仿佛应用本身就是你的语言。</p>
+  <h1 data-i18n="h.t">任何应用，一键汉化</h1>
+  <p class="pain" data-i18n-html="h.pain">游戏没有中文版？开发工具全是英文菜单？<br><strong>浏览器能翻译网页，但翻译不了应用。</strong><br>Screen Translator 可以 — 一键截屏识别，译文直接覆盖原文，像素级还原。</p>
+  <p class="solution" data-i18n="h.sol">不用拍照，不用复制粘贴，不用切换窗口。</p>
 </section>
 
-<!-- Demo: simulated dev tool UI -->
+<!-- Interactive Demo -->
 <section class="demo-sec">
-  <div class="demo-wrap">
-    <div class="demo-window">
+  <div class="demo-outer">
+    <div class="demo-window" id="demoWin">
       <div class="demo-titlebar">
         <div class="dt-dots"><span></span><span></span><span></span></div>
         <div class="dt-title">Preferences</div>
-        <div class="dt-spacer"></div>
       </div>
       <div class="demo-sidebar">
-        <div class="demo-line dl-1"><span class="demo-orig">General</span><span class="demo-trans">通用</span></div>
-        <div class="demo-line dl-2 ds-active"><span class="demo-orig">Appearance</span><span class="demo-trans">外观</span></div>
-        <div class="demo-line dl-3"><span class="demo-orig">Keyboard</span><span class="demo-trans">键盘</span></div>
-        <div class="demo-line dl-4"><span class="demo-orig">Extensions</span><span class="demo-trans">扩展</span></div>
-        <div class="demo-line dl-5"><span class="demo-orig">Profiles</span><span class="demo-trans">配置</span></div>
+        <div class="demo-sb-item"><span class="d-orig">General</span><span class="d-trans">通用</span></div>
+        <div class="demo-sb-item ds-active"><span class="d-orig">Appearance</span><span class="d-trans">外观</span></div>
+        <div class="demo-sb-item"><span class="d-orig">Keyboard</span><span class="d-trans">键盘</span></div>
+        <div class="demo-sb-item"><span class="d-orig">Extensions</span><span class="d-trans">扩展</span></div>
+        <div class="demo-sb-item"><span class="d-orig">Profiles</span><span class="d-trans">配置</span></div>
       </div>
       <div class="demo-content">
-        <div class="demo-line dl-6 dc-title"><span class="demo-orig">Appearance</span><span class="demo-trans">外观</span></div>
-        <div class="demo-row">
-          <div class="demo-line dl-7"><span class="demo-orig">Color Theme</span><span class="demo-trans">颜色主题</span></div>
-          <div class="demo-select">Dark Modern</div>
-        </div>
-        <div class="demo-row">
-          <div class="demo-line dl-8"><span class="demo-orig">Font Family</span><span class="demo-trans">字体</span></div>
-          <div class="demo-select">Menlo, Monaco</div>
-        </div>
-        <div class="demo-row">
-          <div class="demo-line dl-9"><span class="demo-orig">Font Size</span><span class="demo-trans">字号</span></div>
-          <div class="demo-select">14</div>
-        </div>
-        <div class="demo-row">
-          <div class="demo-line dl-10"><span class="demo-orig">Tab Size</span><span class="demo-trans">缩进大小</span></div>
-          <div class="demo-select">2</div>
-        </div>
-        <div class="demo-row">
-          <div class="demo-line dl-11"><span class="demo-orig">Word Wrap</span><span class="demo-trans">自动换行</span></div>
-          <div class="demo-select">Off</div>
-        </div>
-        <div class="demo-row">
-          <div class="demo-line dl-12"><span class="demo-orig">Minimap Enabled</span><span class="demo-trans">启用小地图</span></div>
-          <div class="demo-toggle on"></div>
-        </div>
-        <div class="demo-row">
-          <div class="demo-line dl-13"><span class="demo-orig">Breadcrumbs</span><span class="demo-trans">面包屑导航</span></div>
-          <div class="demo-toggle on"></div>
-        </div>
+        <div class="dc-title"><span class="d-orig">Appearance</span><span class="d-trans">外观</span></div>
+        <div class="demo-row"><div class="d-label"><span class="d-orig">Color Theme</span><span class="d-trans">颜色主题</span></div><div class="demo-select">Dark Modern</div></div>
+        <div class="demo-row"><div class="d-label"><span class="d-orig">Font Family</span><span class="d-trans">字体</span></div><div class="demo-select">Menlo, Monaco</div></div>
+        <div class="demo-row"><div class="d-label"><span class="d-orig">Font Size</span><span class="d-trans">字号</span></div><div class="demo-select">14</div></div>
+        <div class="demo-row"><div class="d-label"><span class="d-orig">Tab Size</span><span class="d-trans">缩进大小</span></div><div class="demo-select">2</div></div>
+        <div class="demo-row"><div class="d-label"><span class="d-orig">Word Wrap</span><span class="d-trans">自动换行</span></div><div class="demo-select">Off</div></div>
+        <div class="demo-row"><div class="d-label"><span class="d-orig">Minimap</span><span class="d-trans">小地图</span></div><div class="demo-toggle on"></div></div>
+        <div class="demo-row"><div class="d-label"><span class="d-orig">Breadcrumbs</span><span class="d-trans">面包屑导航</span></div><div class="demo-toggle on"></div></div>
       </div>
-      <div class="demo-toast">Translating... 78%</div>
+      <div class="demo-toast" id="demoToast">Translating... <span id="demoPercent">0</span>%</div>
     </div>
-    <div class="demo-hint">
-      <div class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div>
-    </div>
+  </div>
+  <div class="demo-trigger">
+    <button class="demo-btn" id="demoBtn" onclick="triggerDemo()">
+      <span data-i18n="demo.try">点击体验翻译效果</span>
+      <span class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></span>
+    </button>
   </div>
 </section>
 
@@ -350,16 +348,16 @@
 
 <section class="sec" id="features">
   <div class="sec-head">
-    <h2 data-i18n="f.t">简洁而强大</h2>
-    <p data-i18n="f.s">零配置开始，开箱即用</p>
+    <h2 data-i18n="f.t">为什么选择 Screen Translator</h2>
+    <p data-i18n="f.s">专为浏览器翻译不了的场景而生</p>
   </div>
   <div class="feat-grid">
-    <div class="feat"><h3 data-i18n="f1.t">一键翻译</h3><p data-i18n="f1.d">按下快捷键，自动完成截屏、文字识别、翻译、覆盖显示，全程无需切换窗口。</p></div>
-    <div class="feat"><h3 data-i18n="f2.t">像素级覆盖</h3><p data-i18n="f2.d">Canvas 直接绘制，自动匹配原始字号、背景色和位置，译文如同原生显示。</p></div>
-    <div class="feat"><h3 data-i18n="f3.t">隐私优先</h3><p data-i18n="f3.d">所有处理在本地完成，截图不会上传。API 密钥仅存储在本地配置文件中。</p></div>
-    <div class="feat"><h3 data-i18n="f4.t">精准识别</h3><p data-i18n="f4.d">结合 macOS Vision OCR 与 Accessibility API，精准检测文字位置，适配各种界面。</p></div>
-    <div class="feat"><h3 data-i18n="f5.t">翻译缓存</h3><p data-i18n="f5.d">按 Shift+S 保存翻译，相同内容瞬间显示，无需重新翻译。</p></div>
-    <div class="feat"><h3 data-i18n="f6.t">自由配置</h3><p data-i18n="f6.d">自定义快捷键、翻译服务、目标语言，支持中英双语设置界面。</p></div>
+    <div class="feat"><h3 data-i18n="f1.t">任何应用都能翻译</h3><p data-i18n="f1.d">不限于浏览器 — 开发工具、设计软件、游戏界面，只要屏幕上有文字就能翻译。</p></div>
+    <div class="feat"><h3 data-i18n="f2.t">像素级原位覆盖</h3><p data-i18n="f2.d">译文直接覆盖原文位置，自动匹配字号和背景色，看起来像原生汉化。</p></div>
+    <div class="feat"><h3 data-i18n="f3.t">隐私优先</h3><p data-i18n="f3.d">截图在本地处理，不上传任何服务器。API 密钥仅存储在你的电脑上。</p></div>
+    <div class="feat"><h3 data-i18n="f4.t">OCR + 无障碍双引擎</h3><p data-i18n="f4.d">macOS Vision OCR 识别文字，Accessibility API 精确定位，两者结合精度更高。</p></div>
+    <div class="feat"><h3 data-i18n="f5.t">一键缓存</h3><p data-i18n="f5.d">常用界面按 Shift+S 缓存，下次秒显，不用重新等待翻译。</p></div>
+    <div class="feat"><h3 data-i18n="f6.t">免费开箱即用</h3><p data-i18n="f6.d">内置 Google 免费翻译，也支持 OpenAI、Claude、DeepL、Ollama 等付费/本地方案。</p></div>
   </div>
 </section>
 
@@ -384,12 +382,12 @@
 <section class="sec" id="shortcuts">
   <div class="sec-head">
     <h2 data-i18n="sc.t">快捷键</h2>
-    <p data-i18n="sc.s">所有操作均可自定义</p>
+    <p data-i18n="sc.s">所有快捷键均可自定义</p>
   </div>
   <div class="sc-list">
-    <div class="sc-row"><span data-i18n="s1">翻译屏幕</span><div class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div></div>
-    <div class="sc-row"><span data-i18n="s2">关闭浮层</span><div class="keys"><kbd>ESC</kbd></div></div>
-    <div class="sc-row"><span data-i18n="s3">缓存翻译</span><div class="keys"><kbd>Shift</kbd><kbd>S</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s1">翻译屏幕</span><div class="keys-show"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s2">关闭浮层</span><div class="keys-show"><kbd>ESC</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s3">缓存翻译</span><div class="keys-show"><kbd>Shift</kbd><kbd>S</kbd></div></div>
   </div>
 </section>
 
@@ -420,35 +418,39 @@ npx electron-builder --mac --dir</div>
 <script>
 const T={
 zh:{
-'n.feat':'特性','n.prov':'服务','n.inst':'安装',
-'h.t':'一键翻译你的屏幕','h.s':'截屏、识别、翻译、覆盖 — 一气呵成。<br>像素级还原，仿佛应用本身就是你的语言。',
-'h.dl':'下载',
+'n.feat':'特性','n.prov':'服务','n.inst':'安装','h.dl':'下载',
+'h.t':'任何应用，一键汉化',
+'h.pain':'游戏没有中文版？开发工具全是英文菜单？<br><strong>浏览器能翻译网页，但翻译不了应用。</strong><br>Screen Translator 可以 — 一键截屏识别，译文直接覆盖原文，像素级还原。',
+'h.sol':'不用拍照，不用复制粘贴，不用切换窗口。',
+'demo.try':'点击体验翻译效果',
 'p.1':'快捷键','p.2':'截屏','p.3':'识别','p.4':'翻译','p.5':'覆盖','p.6':'像素级还原',
-'f.t':'简洁而强大','f.s':'零配置开始，开箱即用',
-'f1.t':'一键翻译','f1.d':'按下快捷键，自动完成截屏、文字识别、翻译、覆盖显示，全程无需切换窗口。',
-'f2.t':'像素级覆盖','f2.d':'Canvas 直接绘制，自动匹配原始字号、背景色和位置，译文如同原生显示。',
-'f3.t':'隐私优先','f3.d':'所有处理在本地完成，截图不会上传。API 密钥仅存储在本地配置文件中。',
-'f4.t':'精准识别','f4.d':'结合 macOS Vision OCR 与 Accessibility API，精准检测文字位置，适配各种界面。',
-'f5.t':'翻译缓存','f5.d':'按 Shift+S 保存翻译，相同内容瞬间显示，无需重新翻译。',
-'f6.t':'自由配置','f6.d':'自定义快捷键、翻译服务、目标语言，支持中英双语设置界面。',
+'f.t':'为什么选择 Screen Translator','f.s':'专为浏览器翻译不了的场景而生',
+'f1.t':'任何应用都能翻译','f1.d':'不限于浏览器 — 开发工具、设计软件、游戏界面，只要屏幕上有文字就能翻译。',
+'f2.t':'像素级原位覆盖','f2.d':'译文直接覆盖原文位置，自动匹配字号和背景色，看起来像原生汉化。',
+'f3.t':'隐私优先','f3.d':'截图在本地处理，不上传任何服务器。API 密钥仅存储在你的电脑上。',
+'f4.t':'OCR + 无障碍双引擎','f4.d':'macOS Vision OCR 识别文字，Accessibility API 精确定位，两者结合精度更高。',
+'f5.t':'一键缓存','f5.d':'常用界面按 Shift+S 缓存，下次秒显，不用重新等待翻译。',
+'f6.t':'免费开箱即用','f6.d':'内置 Google 免费翻译，也支持 OpenAI、Claude、DeepL、Ollama 等付费/本地方案。',
 'pv.t':'翻译引擎','pv.s':'从免费到专业，从云端到本地',
 'g.d':'内置免费','o.d':'GPT-4o','a.d':'Claude 等','d.d':'专业质量','l.d':'完全离线','t.f':'免费',
-'sc.t':'快捷键','sc.s':'所有操作均可自定义',
+'sc.t':'快捷键','sc.s':'所有快捷键均可自定义',
 's1':'翻译屏幕','s2':'关闭浮层','s3':'缓存翻译',
 'i.t':'快速开始','i.b':'从源码构建',
 },
 en:{
-'n.feat':'Features','n.prov':'Providers','n.inst':'Install',
-'h.t':'Translate your screen instantly','h.s':'Capture, OCR, translate, and overlay — all in one step.<br>Pixel-perfect, as if the app spoke your language.',
-'h.dl':'Download',
+'n.feat':'Features','n.prov':'Providers','n.inst':'Install','h.dl':'Download',
+'h.t':'Any app, instantly translated',
+'h.pain':'Game has no localization? Dev tools all in English?<br><strong>Browsers can translate web pages, but not apps.</strong><br>Screen Translator can — one hotkey to capture, OCR, and overlay translations pixel-perfectly.',
+'h.sol':'No screenshots to share. No copy-pasting. No window switching.',
+'demo.try':'Click to see it in action',
 'p.1':'Hotkey','p.2':'Capture','p.3':'Detect','p.4':'Translate','p.5':'Overlay','p.6':'Pixel-perfect',
-'f.t':'Simple yet powerful','f.s':'Zero configuration. Works out of the box.',
-'f1.t':'One-Key Translation','f1.d':'Press a hotkey to capture, detect, translate, and overlay — without switching windows.',
-'f2.t':'Pixel-Perfect Overlay','f2.d':'Canvas rendering matches original font size, background color, and position. Looks native.',
-'f3.t':'Privacy First','f3.d':'Everything runs locally. Screenshots never leave your device. API keys stored in local config only.',
-'f4.t':'Smart Detection','f4.d':'macOS Vision OCR combined with Accessibility API for precise text positioning across any app.',
-'f5.t':'Translation Cache','f5.d':'Press Shift+S to save. Same content displays instantly next time.',
-'f6.t':'Fully Configurable','f6.d':'Custom hotkeys, providers, target language. Bilingual settings UI.',
+'f.t':'Why Screen Translator','f.s':'Built for what browser translation can\'t reach',
+'f1.t':'Translate any application','f1.d':'Not just browsers — dev tools, design apps, game UIs. If there\'s text on screen, it can be translated.',
+'f2.t':'Pixel-perfect overlay','f2.d':'Translations cover the original text in place, matching font size and background. Looks like native localization.',
+'f3.t':'Privacy first','f3.d':'Screenshots are processed locally, never uploaded. API keys stored only on your machine.',
+'f4.t':'OCR + Accessibility','f4.d':'macOS Vision for text recognition, Accessibility API for precise positioning. Dual-engine accuracy.',
+'f5.t':'One-click cache','f5.d':'Press Shift+S to cache frequent screens. Instant display next time, no re-translation needed.',
+'f6.t':'Free out of the box','f6.d':'Built-in Google Translate (free). Also supports OpenAI, Claude, DeepL, and Ollama for premium/local options.',
 'pv.t':'Translation Engines','pv.s':'From free to premium, cloud to local',
 'g.d':'Built-in free','o.d':'GPT-4o','a.d':'Claude, etc.','d.d':'Premium quality','l.d':'Fully offline','t.f':'Free',
 'sc.t':'Shortcuts','sc.s':'All customizable',
@@ -463,22 +465,48 @@ function apply(l){
   document.documentElement.lang=l==='zh'?'zh-CN':'en';
   document.querySelectorAll('[data-i18n]').forEach(e=>{
     const k=e.getAttribute('data-i18n');
-    if(T[l][k]){
-      if(T[l][k].includes('<'))e.innerHTML=T[l][k];
-      else e.textContent=T[l][k];
-    }
+    if(T[l][k]) e.textContent=T[l][k];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(e=>{
+    const k=e.getAttribute('data-i18n-html');
+    if(T[l][k]) e.innerHTML=T[l][k];
   });
 }
-// Demo animation loop
-const dw=document.querySelector('.demo-window');
-function runDemo(){
-  dw.className='demo-window';
-  setTimeout(()=>{dw.classList.add('phase-toast')},800);
-  setTimeout(()=>{dw.classList.remove('phase-toast');dw.classList.add('phase-done')},2400);
-  setTimeout(()=>{dw.className='demo-window'},6000);
-  setTimeout(runDemo,7000);
+
+// Interactive demo
+const dw=document.getElementById('demoWin');
+const toast=document.getElementById('demoToast');
+const pct=document.getElementById('demoPercent');
+const btn=document.getElementById('demoBtn');
+let demoRunning=false;
+let isTranslated=false;
+
+function triggerDemo(){
+  if(demoRunning) return;
+  if(isTranslated){
+    dw.classList.remove('translated');
+    isTranslated=false;
+    btn.classList.remove('active');
+    return;
+  }
+  demoRunning=true;
+  btn.classList.add('active');
+  let p=0;
+  toast.classList.add('show');
+  const iv=setInterval(()=>{
+    p+=Math.random()*18+5;
+    if(p>=100){p=100;clearInterval(iv);
+      setTimeout(()=>{
+        toast.classList.remove('show');
+        dw.classList.add('translated');
+        isTranslated=true;
+        demoRunning=false;
+        btn.classList.remove('active');
+      },300);
+    }
+    pct.textContent=Math.floor(p);
+  },200);
 }
-setTimeout(runDemo,500);
 </script>
 </body>
 </html>
