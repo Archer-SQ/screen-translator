@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/Archer-SQ/screen-translator/releases">下载</a> · 
   <a href="https://archer-sq.github.io/screen-translator/">官网</a> · 
-  <a href="#english">English</a>
+  <a href="./README_EN.md">English</a>
 </p>
 
 ---
@@ -121,38 +121,7 @@ scripts/             原生 macOS 工具（Objective-C）
 
 MIT
 
----
+## 致谢
 
-<h2 id="english">English</h2>
-
-Screen Translator is a macOS tool that captures your screen, detects text via native OCR, translates it, and overlays the translated text pixel-perfectly on top of the original — as if the app was natively localized.
-
-### Quick Start
-
-```bash
-git clone https://github.com/Archer-SQ/screen-translator.git
-cd screen-translator && npm install && npm run dev
-```
-
-### Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Shift + Z + X` | Capture & translate |
-| `ESC` | Dismiss overlay |
-| `Shift + S` | Cache translation |
-
-### Providers
-
-Google Translate (free, built-in) · OpenAI · Anthropic/Claude · DeepL · Ollama (local)
-
-### Requirements
-
-macOS 13.0+ · Screen Recording permission · Accessibility permission
-
-For full documentation, see the Chinese section above or visit the [website](https://archer-sq.github.io/screen-translator/).
-
-## Acknowledgments
-
-- [google-translate-api-x](https://github.com/AidanWelch/google-translate-api) — Free Google Translate
-- [Electron](https://www.electronjs.org/) — Desktop framework
+- [google-translate-api-x](https://github.com/AidanWelch/google-translate-api) — 免费 Google 翻译
+- [Electron](https://www.electronjs.org/) — 桌面应用框架
