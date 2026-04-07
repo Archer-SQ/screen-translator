@@ -161,6 +161,62 @@
     }
     .code .c{color:#555}
 
+    /* Demo */
+    .demo-sec{max-width:1024px;margin:0 auto 80px;padding:0 24px}
+    .demo-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+    .demo-window{
+      width:100%;max-width:520px;
+      box-shadow:var(--shadow-card);border-radius:10px;overflow:hidden;
+      background:var(--bg);
+    }
+    .demo-titlebar{
+      display:flex;gap:6px;padding:10px 14px;
+      background:var(--bg-alt);border-bottom:1px solid var(--border-light);
+    }
+    .demo-titlebar span{width:10px;height:10px;border-radius:50%;background:var(--border-light)}
+    .demo-body{padding:16px 20px;display:flex;flex-direction:column;gap:6px}
+    .demo-spacer{height:12px}
+    .demo-line{position:relative;display:inline-flex;font-size:14px;line-height:1.6}
+    .demo-orig{opacity:1;transition:opacity .3s}
+    .demo-trans{
+      position:absolute;left:0;top:0;
+      opacity:0;transition:opacity .3s;
+      font-weight:500;
+    }
+    .demo-toast{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      background:rgba(0,0,0,0.8);color:#fff;
+      padding:8px 20px;border-radius:8px;
+      font-size:13px;font-weight:500;
+      opacity:0;transition:opacity .3s;
+      pointer-events:none;white-space:nowrap;
+    }
+    .demo-window{position:relative}
+    .demo-hint{opacity:0.5;font-size:12px;color:var(--fg-3)}
+
+    /* Animation states */
+    .demo-window.phase-toast .demo-toast{opacity:1}
+    .demo-window.phase-done .demo-toast{opacity:0}
+    .demo-window.phase-done .demo-orig{opacity:0}
+    .demo-window.phase-done .demo-trans{opacity:1}
+
+    .demo-window.phase-done .dl-1 .demo-trans{transition-delay:.0s}
+    .demo-window.phase-done .dl-2 .demo-trans{transition-delay:.05s}
+    .demo-window.phase-done .dl-3 .demo-trans{transition-delay:.1s}
+    .demo-window.phase-done .dl-4 .demo-trans{transition-delay:.15s}
+    .demo-window.phase-done .dl-5 .demo-trans{transition-delay:.25s}
+    .demo-window.phase-done .dl-6 .demo-trans{transition-delay:.3s}
+    .demo-window.phase-done .dl-7 .demo-trans{transition-delay:.4s}
+    .demo-window.phase-done .dl-8 .demo-trans{transition-delay:.45s}
+    .demo-window.phase-done .dl-1 .demo-orig{transition-delay:.0s}
+    .demo-window.phase-done .dl-2 .demo-orig{transition-delay:.05s}
+    .demo-window.phase-done .dl-3 .demo-orig{transition-delay:.1s}
+    .demo-window.phase-done .dl-4 .demo-orig{transition-delay:.15s}
+    .demo-window.phase-done .dl-5 .demo-orig{transition-delay:.25s}
+    .demo-window.phase-done .dl-6 .demo-orig{transition-delay:.3s}
+    .demo-window.phase-done .dl-7 .demo-orig{transition-delay:.4s}
+    .demo-window.phase-done .dl-8 .demo-orig{transition-delay:.45s}
+
     /* Footer */
     .footer{
       max-width:1024px;margin:0 auto;
@@ -188,7 +244,31 @@
   <p class="sub" data-i18n="h.s">截屏、识别、翻译、覆盖 — 一气呵成。<br>像素级还原，仿佛应用本身就是你的语言。</p>
   <div class="hero-btns">
     <a class="btn btn-dark" href="https://github.com/Archer-SQ/screen-translator/releases/latest" data-i18n="h.dl">下载</a>
-    <a class="btn btn-ghost" href="https://github.com/Archer-SQ/screen-translator" data-i18n="h.src">源码</a>
+  </div>
+</section>
+
+<!-- Demo animation -->
+<section class="demo-sec">
+  <div class="demo-wrap">
+    <div class="demo-window">
+      <div class="demo-titlebar"><span></span><span></span><span></span></div>
+      <div class="demo-body">
+        <div class="demo-line dl-1"><span class="demo-orig">File</span><span class="demo-trans">文件</span></div>
+        <div class="demo-line dl-2"><span class="demo-orig">Edit</span><span class="demo-trans">编辑</span></div>
+        <div class="demo-line dl-3"><span class="demo-orig">View</span><span class="demo-trans">视图</span></div>
+        <div class="demo-line dl-4"><span class="demo-orig">Help</span><span class="demo-trans">帮助</span></div>
+        <div class="demo-spacer"></div>
+        <div class="demo-line dl-5"><span class="demo-orig">Welcome to Screen Translator</span><span class="demo-trans">欢迎使用 Screen Translator</span></div>
+        <div class="demo-line dl-6"><span class="demo-orig">Press Shift+Z+X to translate</span><span class="demo-trans">按 Shift+Z+X 开始翻译</span></div>
+        <div class="demo-spacer"></div>
+        <div class="demo-line dl-7"><span class="demo-orig">Settings</span><span class="demo-trans">设置</span></div>
+        <div class="demo-line dl-8"><span class="demo-orig">About</span><span class="demo-trans">关于</span></div>
+      </div>
+      <div class="demo-toast" data-i18n-html="demo.toast">Translating... 78%</div>
+    </div>
+    <div class="demo-hint">
+      <div class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div>
+    </div>
   </div>
 </section>
 
@@ -280,7 +360,7 @@ const T={
 zh:{
 'n.feat':'特性','n.prov':'服务','n.inst':'安装',
 'h.t':'一键翻译你的屏幕','h.s':'截屏、识别、翻译、覆盖 — 一气呵成。<br>像素级还原，仿佛应用本身就是你的语言。',
-'h.dl':'下载','h.src':'源码',
+'h.dl':'下载',
 'p.1':'快捷键','p.2':'截屏','p.3':'识别','p.4':'翻译','p.5':'覆盖','p.6':'像素级还原',
 'f.t':'简洁而强大','f.s':'零配置开始，开箱即用',
 'f1.t':'一键翻译','f1.d':'按下快捷键，自动完成截屏、文字识别、翻译、覆盖显示，全程无需切换窗口。',
@@ -298,7 +378,7 @@ zh:{
 en:{
 'n.feat':'Features','n.prov':'Providers','n.inst':'Install',
 'h.t':'Translate your screen instantly','h.s':'Capture, OCR, translate, and overlay — all in one step.<br>Pixel-perfect, as if the app spoke your language.',
-'h.dl':'Download','h.src':'Source',
+'h.dl':'Download',
 'p.1':'Hotkey','p.2':'Capture','p.3':'Detect','p.4':'Translate','p.5':'Overlay','p.6':'Pixel-perfect',
 'f.t':'Simple yet powerful','f.s':'Zero configuration. Works out of the box.',
 'f1.t':'One-Key Translation','f1.d':'Press a hotkey to capture, detect, translate, and overlay — without switching windows.',
@@ -327,6 +407,16 @@ function apply(l){
     }
   });
 }
+// Demo animation loop
+const dw=document.querySelector('.demo-window');
+function runDemo(){
+  dw.className='demo-window';
+  setTimeout(()=>{dw.classList.add('phase-toast')},800);
+  setTimeout(()=>{dw.classList.remove('phase-toast');dw.classList.add('phase-done')},2400);
+  setTimeout(()=>{dw.className='demo-window'},6000);
+  setTimeout(runDemo,7000);
+}
+setTimeout(runDemo,500);
 </script>
 </body>
 </html>
