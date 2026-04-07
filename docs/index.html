@@ -49,13 +49,16 @@
     /* Install tip dropdown */
     .dl-wrap{position:relative}
     .dl-tip{
-      display:none;position:absolute;top:36px;right:0;
-      width:340px;padding:16px;
+      display:none;position:absolute;top:28px;right:0;
+      width:340px;padding:16px;padding-top:24px;
       background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);
       border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
       font-size:12px;color:var(--fg-2);line-height:1.7;z-index:60;
     }
     .dl-wrap:hover .dl-tip{display:block}
+    .dl-tip::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:8px;
+    }
     .dl-tip strong{color:var(--fg);font-weight:500;display:block;margin-bottom:6px;font-size:13px}
     .dl-tip code{
       display:block;margin:8px 0;padding:8px 10px 24px;
@@ -66,10 +69,12 @@
       position:relative;
     }
     .dl-tip code:hover{border-color:var(--accent)}
-    .dl-tip code::after{
-      content:'点击复制';position:absolute;right:8px;bottom:4px;
+    .dl-tip code .copy-label{
+      position:absolute;right:8px;bottom:4px;
       font-size:10px;color:var(--fg-3);font-family:-apple-system,sans-serif;
+      pointer-events:none;
     }
+    .dl-tip code .copy-label.copied{color:var(--accent)}
     .dl-tip .steps{color:var(--fg-3);font-size:11px}
     .dl-tip .steps span{color:var(--fg-2)}
     .lang-btn{
@@ -309,7 +314,7 @@
       <div class="dl-tip">
         <strong data-i18n="tip.t">安装提示</strong>
         <p class="steps" data-i18n-html="tip.s"><span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：</p>
-        <code id="xattrCmd" onclick="copyCmd()">xattr -cr /Applications/Screen\ Translator.app</code>
+        <code id="xattrCmd" onclick="copyCmd()">xattr -cr /Applications/Screen\ Translator.app<span class="copy-label" id="copyLabel">点击复制</span></code>
         <p class="steps" data-i18n="tip.e">然后重新打开即可（未签名应用需此步骤）</p>
       </div>
     </div>
@@ -460,7 +465,7 @@ zh:{
 'pv.t':'翻译引擎','pv.s':'从免费到专业，从云端到本地',
 'g.d':'内置免费','o.d':'GPT-4o','a.d':'Claude 等','d.d':'专业质量','l.d':'完全离线','t.f':'免费',
 'sc.t':'快捷键','sc.s':'所有快捷键均可自定义',
-'tip.t':'安装提示','tip.s':'<span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：','tip.e':'然后重新打开即可（未签名应用需此步骤）',
+'copy.label':'点击复制','tip.t':'安装提示','tip.s':'<span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：','tip.e':'然后重新打开即可（未签名应用需此步骤）',
 's1':'翻译屏幕','s2':'关闭浮层','s3':'缓存翻译',
 'i.t':'快速开始','i.b':'从源码构建',
 },
@@ -480,7 +485,7 @@ en:{
 'pv.t':'Translation Engines','pv.s':'From free to premium, cloud to local',
 'g.d':'Built-in free','o.d':'GPT-4o','a.d':'Claude, etc.','d.d':'Premium quality','l.d':'Fully offline','t.f':'Free',
 'sc.t':'Shortcuts','sc.s':'All customizable',
-'tip.t':'Install Guide','tip.s':'<span>1.</span> Download DMG → drag to Applications<br><span>2.</span> If "damaged" warning appears, open Terminal and paste:','tip.e':'Then reopen the app (required for unsigned apps)',
+'copy.label':'Click to copy','tip.t':'Install Guide','tip.s':'<span>1.</span> Download DMG → drag to Applications<br><span>2.</span> If "damaged" warning appears, open Terminal and paste:','tip.e':'Then reopen the app (required for unsigned apps)',
 's1':'Translate Screen','s2':'Dismiss Overlay','s3':'Cache Translation',
 'i.t':'Get Started','i.b':'Build from source',
 }};
@@ -504,12 +509,19 @@ function apply(l){
 function copyCmd(){
   navigator.clipboard.writeText('xattr -cr /Applications/Screen\\ Translator.app').then(()=>{
     const c=document.getElementById('xattrCmd');
+    const lb=document.getElementById('copyLabel');
     c.style.borderColor='var(--accent)';
-    c.setAttribute('data-copied','1');
-    const orig=c.style.cssText;
-    setTimeout(()=>{c.style.borderColor='';},1500);
+    lb.textContent='✓ 已复制';
+    lb.classList.add('copied');
   });
 }
+// Reset label when re-hovering
+document.querySelector('.dl-wrap').addEventListener('mouseenter',()=>{
+  const lb=document.getElementById('copyLabel');
+  lb.textContent=T[L]['copy.label']||'点击复制';
+  lb.classList.remove('copied');
+  document.getElementById('xattrCmd').style.borderColor='';
+});
 
 // Interactive demo
 const dw=document.getElementById('demoWin');
