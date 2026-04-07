@@ -4,7 +4,14 @@
 
 <h1 align="center">Screen Translator</h1>
 
-<p align="center">Instant screen translation overlay for macOS</p>
+<p align="center"><strong>Instant screen translation overlay for macOS</strong></p>
+
+<p align="center">
+  <a href="https://github.com/Archer-SQ/screen-translator/releases"><img src="https://img.shields.io/github/v/release/Archer-SQ/screen-translator?style=flat&label=Release" alt="Release"></a>
+  <a href="https://github.com/Archer-SQ/screen-translator/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Archer-SQ/screen-translator?style=flat" alt="License"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey?style=flat" alt="macOS">
+  <img src="https://img.shields.io/badge/Electron-33-47848f?style=flat" alt="Electron">
+</p>
 
 <p align="center">
   <a href="https://github.com/Archer-SQ/screen-translator/releases">Download</a> · 

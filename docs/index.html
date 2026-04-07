@@ -3,446 +3,328 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Screen Translator — macOS 屏幕翻译工具</title>
-  <meta name="description" content="一键截屏翻译，像素级覆盖原文。免费、开源、隐私优先。">
+  <title>Screen Translator</title>
+  <meta name="description" content="macOS 屏幕翻译工具 — 一键截屏、OCR、翻译、像素级覆盖">
   <link rel="icon" type="image/png" href="icon.png">
   <style>
-    :root {
-      --bg: #ffffff;
-      --bg-alt: #f7f7f8;
-      --text: #1d1d1f;
-      --text-2: #6e6e73;
-      --text-3: #86868b;
-      --accent: #0071e3;
-      --accent-hover: #0077ed;
-      --border: #d2d2d7;
-      --border-light: #e8e8ed;
-      --radius: 14px;
-      --w: 960px;
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --fg:#171717;--fg-2:#666;--fg-3:#888;
+      --bg:#fff;--bg-alt:#fafafa;
+      --border:rgba(0,0,0,0.08);--border-light:#ebebeb;
+      --accent:#171717;--accent-fg:#fff;
+      --link:#0072f5;
+      --shadow-ring:0 0 0 1px var(--border);
+      --shadow-card:0 0 0 1px var(--border),0 2px 4px rgba(0,0,0,0.04),0 8px 16px -8px rgba(0,0,0,0.04);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #000000;
-        --bg-alt: #111113;
-        --text: #f5f5f7;
-        --text-2: #a1a1a6;
-        --text-3: #6e6e73;
-        --accent: #2997ff;
-        --accent-hover: #4dabff;
-        --border: #333336;
-        --border-light: #1d1d1f;
+    @media(prefers-color-scheme:dark){
+      :root{
+        --fg:#ededed;--fg-2:#a1a1a6;--fg-3:#6e6e73;
+        --bg:#0a0a0a;--bg-alt:#111;
+        --border:rgba(255,255,255,0.1);--border-light:#222;
+        --accent:#ededed;--accent-fg:#0a0a0a;
+        --link:#3b9eff;
+        --shadow-ring:0 0 0 1px var(--border);
+        --shadow-card:0 0 0 1px var(--border),0 2px 4px rgba(0,0,0,0.2);
       }
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif;
-      background: var(--bg); color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      line-height: 1.5;
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC',sans-serif;
+      background:var(--bg);color:var(--fg);
+      -webkit-font-smoothing:antialiased;line-height:1.5;
     }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a{color:var(--link);text-decoration:none}
+    a:hover{text-decoration:underline}
 
     /* Nav */
-    nav {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(255,255,255,0.72);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 0.5px solid var(--border-light);
+    .nav{
+      position:sticky;top:0;z-index:50;
+      background:rgba(255,255,255,0.8);
+      backdrop-filter:saturate(180%) blur(20px);
+      -webkit-backdrop-filter:saturate(180%) blur(20px);
+      border-bottom:1px solid var(--border-light);
     }
-    @media (prefers-color-scheme: dark) {
-      nav { background: rgba(0,0,0,0.72); }
+    @media(prefers-color-scheme:dark){
+      .nav{background:rgba(10,10,10,0.8)}
     }
-    .nav-c {
-      max-width: var(--w); margin: 0 auto;
-      height: 48px; padding: 0 20px;
-      display: flex; align-items: center; justify-content: space-between;
+    .nav-inner{
+      max-width:1024px;margin:0 auto;height:48px;padding:0 24px;
+      display:flex;align-items:center;justify-content:space-between;
     }
-    .nav-l { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; color: var(--text); }
-    .nav-l img { width: 24px; height: 24px; border-radius: 5px; }
-    .nav-r { display: flex; align-items: center; gap: 20px; font-size: 13px; }
-    .nav-r a { color: var(--text-2); }
-    .nav-r a:hover { color: var(--text); text-decoration: none; }
-    #lang-btn {
-      background: none; border: 1px solid var(--border); color: var(--text-2);
-      padding: 3px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
-      font-family: inherit;
+    .nav-brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--fg);text-decoration:none}
+    .nav-brand img{width:22px;height:22px;border-radius:5px}
+    .nav-r{display:flex;align-items:center;gap:20px;font-size:13px}
+    .nav-r a{color:var(--fg-2)}
+    .nav-r a:hover{color:var(--fg);text-decoration:none}
+    .lang-btn{
+      background:none;border:1px solid var(--border-light);color:var(--fg-3);
+      padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;
     }
-    #lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .lang-btn:hover{border-color:var(--fg-3);color:var(--fg-2)}
 
     /* Hero */
-    .hero {
-      max-width: var(--w); margin: 0 auto;
-      padding: 100px 20px 60px; text-align: center;
+    .hero{
+      max-width:1024px;margin:0 auto;
+      padding:120px 24px 80px;text-align:center;
     }
-    .hero h1 {
-      font-size: 48px; font-weight: 700; letter-spacing: -0.02em;
-      line-height: 1.15; margin-bottom: 16px;
+    .hero h1{
+      font-size:56px;font-weight:700;
+      letter-spacing:-2.8px;line-height:1.05;
+      margin-bottom:16px;
     }
-    @media (max-width: 640px) { .hero h1 { font-size: 32px; } }
-    .hero .sub {
-      font-size: 18px; color: var(--text-2);
-      max-width: 480px; margin: 0 auto 32px; line-height: 1.6;
+    .hero .sub{
+      font-size:18px;color:var(--fg-2);line-height:1.7;
+      max-width:460px;margin:0 auto 36px;
     }
-    .hero-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 12px 24px; border-radius: 10px;
-      font-size: 14px; font-weight: 600; border: none; cursor: pointer;
-      text-decoration: none; transition: all 0.15s;
+    .hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .btn{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:10px 20px;border-radius:6px;
+      font-size:14px;font-weight:500;border:none;cursor:pointer;
+      text-decoration:none;transition:opacity .15s;
     }
-    .btn:hover { text-decoration: none; }
-    .btn-p { background: var(--accent); color: #fff; }
-    .btn-p:hover { background: var(--accent-hover); }
-    .btn-s { background: transparent; color: var(--accent); border: 1px solid var(--border); }
-    .btn-s:hover { border-color: var(--accent); }
+    .btn:hover{text-decoration:none;opacity:0.85}
+    .btn-dark{background:var(--accent);color:var(--accent-fg)}
+    .btn-ghost{background:transparent;color:var(--fg);box-shadow:var(--shadow-ring)}
 
-    /* Flow */
-    .flow-bar {
-      max-width: var(--w); margin: 0 auto 60px;
-      display: flex; align-items: center; justify-content: center;
-      gap: 0; padding: 0 20px; flex-wrap: wrap;
+    /* Pipeline */
+    .pipeline{
+      max-width:640px;margin:0 auto 80px;
+      display:flex;align-items:center;justify-content:center;
+      gap:0;padding:0 24px;
     }
-    .flow-item {
-      text-align: center; padding: 12px 18px;
-    }
-    .flow-item strong { display: block; font-size: 14px; font-weight: 600; }
-    .flow-item span { font-size: 12px; color: var(--text-3); }
-    .flow-sep { color: var(--border); font-size: 16px; margin-bottom: 14px; }
-    @media (max-width: 640px) {
-      .flow-sep { display: none; }
-      .flow-bar { gap: 4px; }
-      .flow-item { padding: 8px 10px; }
+    .pipe-step{text-align:center;padding:8px 14px}
+    .pipe-step strong{display:block;font-size:13px;font-weight:600;letter-spacing:-0.3px}
+    .pipe-step span{font-size:11px;color:var(--fg-3)}
+    .pipe-arr{color:var(--border-light);font-size:14px;margin-bottom:12px}
+    @media(max-width:600px){
+      .hero h1{font-size:36px;letter-spacing:-1.8px}
+      .pipe-arr{display:none}.pipeline{flex-wrap:wrap;gap:4px}
     }
 
     /* Section */
-    .sec {
-      max-width: var(--w); margin: 0 auto;
-      padding: 60px 20px;
-    }
-    .sec-t {
-      text-align: center; margin-bottom: 40px;
-    }
-    .sec-t h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 8px; }
-    .sec-t p { font-size: 15px; color: var(--text-2); }
+    .sec{max-width:1024px;margin:0 auto;padding:80px 24px}
+    .sec-head{text-align:center;margin-bottom:48px}
+    .sec-head h2{font-size:32px;font-weight:700;letter-spacing:-1.3px;margin-bottom:6px}
+    .sec-head p{font-size:15px;color:var(--fg-2)}
+    .divider{border:none;border-top:1px solid var(--border-light);max-width:1024px;margin:0 auto}
 
     /* Features */
-    .feat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-    @media (max-width: 640px) {
-      .feat-grid { grid-template-columns: 1fr; }
-    }
-    .feat {
-      padding: 24px;
-      background: var(--bg-alt);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius);
-    }
-    .feat h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-    .feat p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border-light);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-ring)}
+    .feat{padding:28px;background:var(--bg)}
+    .feat h3{font-size:15px;font-weight:600;letter-spacing:-0.3px;margin-bottom:6px}
+    .feat p{font-size:13px;color:var(--fg-2);line-height:1.65}
+    @media(max-width:700px){.feat-grid{grid-template-columns:1fr}}
 
     /* Providers */
-    .prov-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
+    .prov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border-light);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-ring)}
+    .prov{padding:24px 12px;background:var(--bg);text-align:center}
+    .prov h4{font-size:14px;font-weight:600;margin-bottom:2px}
+    .prov span{font-size:11px;color:var(--fg-3)}
+    .prov .tag{
+      display:inline-block;margin-top:8px;padding:2px 8px;border-radius:9999px;
+      font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;
     }
-    @media (max-width: 640px) {
-      .prov-grid { grid-template-columns: repeat(2, 1fr); }
+    .tag-f{background:#e8f5e9;color:#2e7d32}
+    .tag-k{background:#f3f4f6;color:#666}
+    @media(prefers-color-scheme:dark){
+      .tag-f{background:#14261a;color:#6fcf97}
+      .tag-k{background:#1a1a1a;color:#999}
     }
-    .prov {
-      padding: 20px 12px;
-      background: var(--bg-alt);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius);
-      text-align: center;
-    }
-    .prov h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-    .prov span { font-size: 11px; color: var(--text-3); }
-    .prov .tag {
-      display: inline-block; margin-top: 8px;
-      padding: 2px 8px; border-radius: 4px;
-      font-size: 11px; font-weight: 600;
-    }
-    .tag-free { background: #e8f5e9; color: #2e7d32; }
-    .tag-key { background: #fff8e1; color: #f57f17; }
-    @media (prefers-color-scheme: dark) {
-      .tag-free { background: #1b3a26; color: #66bb6a; }
-      .tag-key { background: #3a2e15; color: #ffb74d; }
-    }
+    @media(max-width:600px){.prov-grid{grid-template-columns:repeat(2,1fr)}}
 
     /* Shortcuts */
-    .sc-list {
-      max-width: 420px; margin: 0 auto;
-      display: flex; flex-direction: column; gap: 8px;
+    .sc-list{max-width:400px;margin:0 auto;display:flex;flex-direction:column;gap:1px;background:var(--border-light);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-ring)}
+    .sc-row{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 20px;background:var(--bg);font-size:14px;
     }
-    .sc-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 20px;
-      background: var(--bg-alt);
-      border: 0.5px solid var(--border-light);
-      border-radius: 10px;
-      font-size: 14px;
-    }
-    .keys { display: flex; gap: 4px; }
-    .keys kbd {
-      padding: 3px 8px; border-radius: 5px;
-      background: var(--bg); border: 1px solid var(--border);
-      font-family: inherit; font-size: 12px; font-weight: 600;
+    .keys{display:flex;gap:4px}
+    .keys kbd{
+      padding:2px 7px;border-radius:4px;
+      background:var(--bg-alt);box-shadow:var(--shadow-ring);
+      font-family:inherit;font-size:11px;font-weight:600;
     }
 
     /* Install */
-    .inst {
-      max-width: 520px; margin: 0 auto;
-      background: var(--bg-alt);
-      border: 0.5px solid var(--border-light);
-      border-radius: var(--radius);
-      padding: 28px 32px;
+    .inst{
+      max-width:520px;margin:0 auto;
+      box-shadow:var(--shadow-card);border-radius:12px;
+      overflow:hidden;
     }
-    .inst h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-    .code {
-      background: #1c1c1e; color: #e0e0e0;
-      padding: 16px 20px; border-radius: 10px;
-      font-family: 'SF Mono', Menlo, monospace;
-      font-size: 13px; line-height: 1.9;
-      overflow-x: auto; white-space: pre;
+    .inst-head{padding:20px 24px 0;font-size:14px;font-weight:600}
+    .code{
+      margin:16px;padding:20px;border-radius:8px;
+      background:#141414;color:#e0e0e0;
+      font-family:'SF Mono',Menlo,monospace;
+      font-size:13px;line-height:2;overflow-x:auto;white-space:pre;
     }
-    .code .c { color: #636366; }
+    .code .c{color:#555}
 
     /* Footer */
-    footer {
-      max-width: var(--w); margin: 0 auto;
-      padding: 32px 20px;
-      text-align: center;
-      border-top: 0.5px solid var(--border-light);
-      margin-top: 40px;
+    .footer{
+      max-width:1024px;margin:0 auto;
+      padding:32px 24px;text-align:center;
+      border-top:1px solid var(--border-light);margin-top:60px;
     }
-    footer p { font-size: 12px; color: var(--text-3); }
+    .footer p{font-size:12px;color:var(--fg-3)}
   </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-c">
-    <div class="nav-l">
-      <img src="icon.png" alt="">Screen Translator
-    </div>
-    <div class="nav-r">
-      <a href="#features" data-i18n="nav.features">特性</a>
-      <a href="#providers" data-i18n="nav.providers">服务</a>
-      <a href="#install" data-i18n="nav.install">安装</a>
-      <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a>
-      <button id="lang-btn" onclick="toggleLang()">EN</button>
-    </div>
+<nav class="nav"><div class="nav-inner">
+  <a class="nav-brand" href="#"><img src="icon.png" alt="">Screen Translator</a>
+  <div class="nav-r">
+    <a href="#features" data-i18n="n.feat">特性</a>
+    <a href="#providers" data-i18n="n.prov">服务</a>
+    <a href="#install" data-i18n="n.inst">安装</a>
+    <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a>
+    <button class="lang-btn" onclick="toggleLang()">EN</button>
   </div>
-</nav>
+</div></nav>
 
 <section class="hero">
-  <h1 data-i18n="hero.title">一键翻译你的屏幕</h1>
-  <p class="sub" data-i18n="hero.sub">截屏、识别、翻译、覆盖 — 一气呵成。像素级还原，仿佛应用本身就是你的语言。</p>
+  <h1 data-i18n="h.t">一键翻译你的屏幕</h1>
+  <p class="sub" data-i18n="h.s">截屏、识别、翻译、覆盖 — 一气呵成。<br>像素级还原，仿佛应用本身就是你的语言。</p>
   <div class="hero-btns">
-    <a class="btn btn-p" id="dl-btn" href="https://github.com/Archer-SQ/screen-translator/releases/latest" data-i18n="hero.download">下载</a>
-    <a class="btn btn-s" href="https://github.com/Archer-SQ/screen-translator" data-i18n="hero.source">查看源码</a>
+    <a class="btn btn-dark" href="https://github.com/Archer-SQ/screen-translator/releases/latest" data-i18n="h.dl">下载</a>
+    <a class="btn btn-ghost" href="https://github.com/Archer-SQ/screen-translator" data-i18n="h.src">源码</a>
   </div>
 </section>
 
-<div class="flow-bar">
-  <div class="flow-item"><strong data-i18n="flow.hotkey">快捷键</strong><span>Shift+Z+X</span></div>
-  <span class="flow-sep">&rarr;</span>
-  <div class="flow-item"><strong data-i18n="flow.capture">截屏</strong><span>screencapture</span></div>
-  <span class="flow-sep">&rarr;</span>
-  <div class="flow-item"><strong data-i18n="flow.detect">识别</strong><span>OCR + AX</span></div>
-  <span class="flow-sep">&rarr;</span>
-  <div class="flow-item"><strong data-i18n="flow.translate">翻译</strong><span>Google / API</span></div>
-  <span class="flow-sep">&rarr;</span>
-  <div class="flow-item"><strong data-i18n="flow.overlay">覆盖</strong><span data-i18n="flow.pixel">像素级还原</span></div>
+<div class="pipeline">
+  <div class="pipe-step"><strong data-i18n="p.1">快捷键</strong><span>Shift+Z+X</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.2">截屏</strong><span>screencapture</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.3">识别</strong><span>Vision + AX</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.4">翻译</strong><span>Google / API</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.5">覆盖</strong><span data-i18n="p.6">像素级还原</span></div>
 </div>
 
+<hr class="divider">
+
 <section class="sec" id="features">
-  <div class="sec-t">
-    <h2 data-i18n="feat.title">简洁而强大</h2>
-    <p data-i18n="feat.sub">零配置即可开始，开箱即用。</p>
+  <div class="sec-head">
+    <h2 data-i18n="f.t">简洁而强大</h2>
+    <p data-i18n="f.s">零配置开始，开箱即用</p>
   </div>
   <div class="feat-grid">
-    <div class="feat">
-      <h3 data-i18n="f1.t">一键翻译</h3>
-      <p data-i18n="f1.d">按下快捷键，自动完成截屏、文字识别、翻译、覆盖显示。全程无需切换窗口。</p>
-    </div>
-    <div class="feat">
-      <h3 data-i18n="f2.t">像素级覆盖</h3>
-      <p data-i18n="f2.d">基于 Canvas 直接绘制，自动匹配原始字号、背景色和位置，译文如同原生显示。</p>
-    </div>
-    <div class="feat">
-      <h3 data-i18n="f3.t">隐私优先</h3>
-      <p data-i18n="f3.d">所有处理在本地完成，截图不会上传。API 密钥仅存储在本地配置文件中。</p>
-    </div>
-    <div class="feat">
-      <h3 data-i18n="f4.t">精准识别</h3>
-      <p data-i18n="f4.d">结合 macOS Vision OCR 与 Accessibility API，精准检测文字位置，适配各种应用界面。</p>
-    </div>
-    <div class="feat">
-      <h3 data-i18n="f5.t">翻译缓存</h3>
-      <p data-i18n="f5.d">按 Shift+S 保存当前翻译结果，下次遇到相同内容时瞬间显示，无需重新翻译。</p>
-    </div>
-    <div class="feat">
-      <h3 data-i18n="f6.t">自由配置</h3>
-      <p data-i18n="f6.d">自定义快捷键、翻译服务、目标语言。支持中英双语设置界面。</p>
-    </div>
+    <div class="feat"><h3 data-i18n="f1.t">一键翻译</h3><p data-i18n="f1.d">按下快捷键，自动完成截屏、文字识别、翻译、覆盖显示，全程无需切换窗口。</p></div>
+    <div class="feat"><h3 data-i18n="f2.t">像素级覆盖</h3><p data-i18n="f2.d">Canvas 直接绘制，自动匹配原始字号、背景色和位置，译文如同原生显示。</p></div>
+    <div class="feat"><h3 data-i18n="f3.t">隐私优先</h3><p data-i18n="f3.d">所有处理在本地完成，截图不会上传。API 密钥仅存储在本地配置文件中。</p></div>
+    <div class="feat"><h3 data-i18n="f4.t">精准识别</h3><p data-i18n="f4.d">结合 macOS Vision OCR 与 Accessibility API，精准检测文字位置，适配各种界面。</p></div>
+    <div class="feat"><h3 data-i18n="f5.t">翻译缓存</h3><p data-i18n="f5.d">按 Shift+S 保存翻译，相同内容瞬间显示，无需重新翻译。</p></div>
+    <div class="feat"><h3 data-i18n="f6.t">自由配置</h3><p data-i18n="f6.d">自定义快捷键、翻译服务、目标语言，支持中英双语设置界面。</p></div>
   </div>
 </section>
+
+<hr class="divider">
 
 <section class="sec" id="providers">
-  <div class="sec-t">
-    <h2 data-i18n="prov.title">多种翻译引擎</h2>
-    <p data-i18n="prov.sub">从免费到专业，从云端到本地，自由选择。</p>
+  <div class="sec-head">
+    <h2 data-i18n="pv.t">翻译引擎</h2>
+    <p data-i18n="pv.s">从免费到专业，从云端到本地</p>
   </div>
   <div class="prov-grid">
-    <div class="prov">
-      <h4>Google</h4>
-      <span data-i18n="p.google">内置免费，自动代理</span>
-      <br><span class="tag tag-free" data-i18n="p.free">免费</span>
-    </div>
-    <div class="prov">
-      <h4>OpenAI</h4>
-      <span data-i18n="p.openai">GPT-4o，自定义端点</span>
-      <br><span class="tag tag-key">API Key</span>
-    </div>
-    <div class="prov">
-      <h4>Anthropic</h4>
-      <span data-i18n="p.claude">Claude、MiniMax 等</span>
-      <br><span class="tag tag-key">API Key</span>
-    </div>
-    <div class="prov">
-      <h4>DeepL</h4>
-      <span data-i18n="p.deepl">专业翻译质量</span>
-      <br><span class="tag tag-key">API Key</span>
-    </div>
-    <div class="prov">
-      <h4>Ollama</h4>
-      <span data-i18n="p.ollama">本地模型，完全离线</span>
-      <br><span class="tag tag-free" data-i18n="p.free">免费</span>
-    </div>
+    <div class="prov"><h4>Google</h4><span data-i18n="g.d">内置免费</span><br><span class="tag tag-f" data-i18n="t.f">免费</span></div>
+    <div class="prov"><h4>OpenAI</h4><span data-i18n="o.d">GPT-4o</span><br><span class="tag tag-k">API Key</span></div>
+    <div class="prov"><h4>Anthropic</h4><span data-i18n="a.d">Claude 等</span><br><span class="tag tag-k">API Key</span></div>
+    <div class="prov"><h4>DeepL</h4><span data-i18n="d.d">专业质量</span><br><span class="tag tag-k">API Key</span></div>
+    <div class="prov"><h4>Ollama</h4><span data-i18n="l.d">完全离线</span><br><span class="tag tag-f" data-i18n="t.f">免费</span></div>
   </div>
 </section>
+
+<hr class="divider">
 
 <section class="sec" id="shortcuts">
-  <div class="sec-t">
-    <h2 data-i18n="sc.title">键盘驱动</h2>
-    <p data-i18n="sc.sub">所有操作均可通过快捷键完成，且支持自定义。</p>
+  <div class="sec-head">
+    <h2 data-i18n="sc.t">快捷键</h2>
+    <p data-i18n="sc.s">所有操作均可自定义</p>
   </div>
   <div class="sc-list">
-    <div class="sc-row">
-      <span data-i18n="sc.translate">翻译屏幕</span>
-      <div class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div>
-    </div>
-    <div class="sc-row">
-      <span data-i18n="sc.dismiss">关闭浮层</span>
-      <div class="keys"><kbd>ESC</kbd></div>
-    </div>
-    <div class="sc-row">
-      <span data-i18n="sc.cache">缓存翻译</span>
-      <div class="keys"><kbd>Shift</kbd><kbd>S</kbd></div>
-    </div>
+    <div class="sc-row"><span data-i18n="s1">翻译屏幕</span><div class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s2">关闭浮层</span><div class="keys"><kbd>ESC</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s3">缓存翻译</span><div class="keys"><kbd>Shift</kbd><kbd>S</kbd></div></div>
   </div>
 </section>
 
+<hr class="divider">
+
 <section class="sec" id="install">
-  <div class="sec-t">
-    <h2 data-i18n="inst.title">快速开始</h2>
-    <p data-i18n="inst.sub">从源码构建，几行命令即可完成。</p>
+  <div class="sec-head">
+    <h2 data-i18n="i.t">快速开始</h2>
   </div>
   <div class="inst">
-    <h3 data-i18n="inst.build">从源码构建</h3>
+    <div class="inst-head" data-i18n="i.b">从源码构建</div>
     <div class="code"><span class="c"># Clone</span>
 git clone https://github.com/Archer-SQ/screen-translator.git
 cd screen-translator
 
-<span class="c"># Install</span>
-npm install
-
-<span class="c"># Run</span>
-npm run dev
+<span class="c"># Install & Run</span>
+npm install && npm run dev
 
 <span class="c"># Package</span>
 npx electron-builder --mac --dir</div>
   </div>
 </section>
 
-<footer>
-  <p>
-    MIT License &bull;
-    <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a> &bull;
-    macOS 13.0+
-  </p>
+<footer class="footer">
+  <p>MIT License &middot; macOS 13.0+ &middot; <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a></p>
 </footer>
 
 <script>
-const i18n = {
-  zh: {
-    'nav.features': '特性', 'nav.providers': '服务', 'nav.install': '安装',
-    'hero.title': '一键翻译你的屏幕',
-    'hero.sub': '截屏、识别、翻译、覆盖 — 一气呵成。像素级还原，仿佛应用本身就是你的语言。',
-    'hero.download': '下载', 'hero.source': '查看源码',
-    'flow.hotkey': '快捷键', 'flow.capture': '截屏', 'flow.detect': '识别',
-    'flow.translate': '翻译', 'flow.overlay': '覆盖', 'flow.pixel': '像素级还原',
-    'feat.title': '简洁而强大', 'feat.sub': '零配置即可开始，开箱即用。',
-    'f1.t': '一键翻译', 'f1.d': '按下快捷键，自动完成截屏、文字识别、翻译、覆盖显示。全程无需切换窗口。',
-    'f2.t': '像素级覆盖', 'f2.d': '基于 Canvas 直接绘制，自动匹配原始字号、背景色和位置，译文如同原生显示。',
-    'f3.t': '隐私优先', 'f3.d': '所有处理在本地完成，截图不会上传。API 密钥仅存储在本地配置文件中。',
-    'f4.t': '精准识别', 'f4.d': '结合 macOS Vision OCR 与 Accessibility API，精准检测文字位置，适配各种应用界面。',
-    'f5.t': '翻译缓存', 'f5.d': '按 Shift+S 保存当前翻译结果，下次遇到相同内容时瞬间显示，无需重新翻译。',
-    'f6.t': '自由配置', 'f6.d': '自定义快捷键、翻译服务、目标语言。支持中英双语设置界面。',
-    'prov.title': '多种翻译引擎', 'prov.sub': '从免费到专业，从云端到本地，自由选择。',
-    'p.google': '内置免费，自动代理', 'p.openai': 'GPT-4o，自定义端点',
-    'p.claude': 'Claude、MiniMax 等', 'p.deepl': '专业翻译质量',
-    'p.ollama': '本地模型，完全离线', 'p.free': '免费',
-    'sc.title': '键盘驱动', 'sc.sub': '所有操作均可通过快捷键完成，且支持自定义。',
-    'sc.translate': '翻译屏幕', 'sc.dismiss': '关闭浮层', 'sc.cache': '缓存翻译',
-    'inst.title': '快速开始', 'inst.sub': '从源码构建，几行命令即可完成。', 'inst.build': '从源码构建',
-  },
-  en: {
-    'nav.features': 'Features', 'nav.providers': 'Providers', 'nav.install': 'Install',
-    'hero.title': 'Translate your screen instantly',
-    'hero.sub': 'Capture, OCR, translate, and overlay — all in one step. Pixel-perfect rendering, as if the app spoke your language natively.',
-    'hero.download': 'Download', 'hero.source': 'View Source',
-    'flow.hotkey': 'Hotkey', 'flow.capture': 'Capture', 'flow.detect': 'Detect',
-    'flow.translate': 'Translate', 'flow.overlay': 'Overlay', 'flow.pixel': 'Pixel-perfect',
-    'feat.title': 'Simple yet powerful', 'feat.sub': 'Zero configuration needed. Works out of the box.',
-    'f1.t': 'One-Key Translation', 'f1.d': 'Press a hotkey to capture, detect text, translate, and overlay — all without switching windows.',
-    'f2.t': 'Pixel-Perfect Overlay', 'f2.d': 'Canvas-based rendering matches original font size, background color, and position. Translations look native.',
-    'f3.t': 'Privacy First', 'f3.d': 'Everything runs locally. Screenshots never leave your device. API keys are stored only in your local config.',
-    'f4.t': 'Smart Detection', 'f4.d': 'Combines macOS Vision OCR with Accessibility API for precise text detection across any application.',
-    'f5.t': 'Translation Cache', 'f5.d': 'Press Shift+S to save translations. Cached results display instantly without re-translating.',
-    'f6.t': 'Fully Configurable', 'f6.d': 'Customize hotkeys, translation providers, and target language. Bilingual settings UI included.',
-    'prov.title': 'Multiple translation engines', 'prov.sub': 'From free to premium, cloud to local. Your choice.',
-    'p.google': 'Built-in, auto proxy', 'p.openai': 'GPT-4o, custom endpoint',
-    'p.claude': 'Claude, MiniMax, etc.', 'p.deepl': 'Premium quality',
-    'p.ollama': 'Local models, fully offline', 'p.free': 'Free',
-    'sc.title': 'Keyboard-first', 'sc.sub': 'Every action is a hotkey away. All shortcuts are customizable.',
-    'sc.translate': 'Translate Screen', 'sc.dismiss': 'Dismiss Overlay', 'sc.cache': 'Cache Translation',
-    'inst.title': 'Get started', 'inst.sub': 'Build from source in a few commands.', 'inst.build': 'Build from source',
-  }
-};
-
-let lang = localStorage.getItem('st-lang') || 'zh';
-applyLang(lang);
-
-function toggleLang() {
-  lang = lang === 'zh' ? 'en' : 'zh';
-  localStorage.setItem('st-lang', lang);
-  applyLang(lang);
-}
-
-function applyLang(l) {
-  document.getElementById('lang-btn').textContent = l === 'zh' ? 'EN' : '中文';
-  document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (i18n[l][key]) el.textContent = i18n[l][key];
+const T={
+zh:{
+'n.feat':'特性','n.prov':'服务','n.inst':'安装',
+'h.t':'一键翻译你的屏幕','h.s':'截屏、识别、翻译、覆盖 — 一气呵成。<br>像素级还原，仿佛应用本身就是你的语言。',
+'h.dl':'下载','h.src':'源码',
+'p.1':'快捷键','p.2':'截屏','p.3':'识别','p.4':'翻译','p.5':'覆盖','p.6':'像素级还原',
+'f.t':'简洁而强大','f.s':'零配置开始，开箱即用',
+'f1.t':'一键翻译','f1.d':'按下快捷键，自动完成截屏、文字识别、翻译、覆盖显示，全程无需切换窗口。',
+'f2.t':'像素级覆盖','f2.d':'Canvas 直接绘制，自动匹配原始字号、背景色和位置，译文如同原生显示。',
+'f3.t':'隐私优先','f3.d':'所有处理在本地完成，截图不会上传。API 密钥仅存储在本地配置文件中。',
+'f4.t':'精准识别','f4.d':'结合 macOS Vision OCR 与 Accessibility API，精准检测文字位置，适配各种界面。',
+'f5.t':'翻译缓存','f5.d':'按 Shift+S 保存翻译，相同内容瞬间显示，无需重新翻译。',
+'f6.t':'自由配置','f6.d':'自定义快捷键、翻译服务、目标语言，支持中英双语设置界面。',
+'pv.t':'翻译引擎','pv.s':'从免费到专业，从云端到本地',
+'g.d':'内置免费','o.d':'GPT-4o','a.d':'Claude 等','d.d':'专业质量','l.d':'完全离线','t.f':'免费',
+'sc.t':'快捷键','sc.s':'所有操作均可自定义',
+'s1':'翻译屏幕','s2':'关闭浮层','s3':'缓存翻译',
+'i.t':'快速开始','i.b':'从源码构建',
+},
+en:{
+'n.feat':'Features','n.prov':'Providers','n.inst':'Install',
+'h.t':'Translate your screen instantly','h.s':'Capture, OCR, translate, and overlay — all in one step.<br>Pixel-perfect, as if the app spoke your language.',
+'h.dl':'Download','h.src':'Source',
+'p.1':'Hotkey','p.2':'Capture','p.3':'Detect','p.4':'Translate','p.5':'Overlay','p.6':'Pixel-perfect',
+'f.t':'Simple yet powerful','f.s':'Zero configuration. Works out of the box.',
+'f1.t':'One-Key Translation','f1.d':'Press a hotkey to capture, detect, translate, and overlay — without switching windows.',
+'f2.t':'Pixel-Perfect Overlay','f2.d':'Canvas rendering matches original font size, background color, and position. Looks native.',
+'f3.t':'Privacy First','f3.d':'Everything runs locally. Screenshots never leave your device. API keys stored in local config only.',
+'f4.t':'Smart Detection','f4.d':'macOS Vision OCR combined with Accessibility API for precise text positioning across any app.',
+'f5.t':'Translation Cache','f5.d':'Press Shift+S to save. Same content displays instantly next time.',
+'f6.t':'Fully Configurable','f6.d':'Custom hotkeys, providers, target language. Bilingual settings UI.',
+'pv.t':'Translation Engines','pv.s':'From free to premium, cloud to local',
+'g.d':'Built-in free','o.d':'GPT-4o','a.d':'Claude, etc.','d.d':'Premium quality','l.d':'Fully offline','t.f':'Free',
+'sc.t':'Shortcuts','sc.s':'All customizable',
+'s1':'Translate Screen','s2':'Dismiss Overlay','s3':'Cache Translation',
+'i.t':'Get Started','i.b':'Build from source',
+}};
+let L=localStorage.getItem('st-l')||'zh';
+apply(L);
+function toggleLang(){L=L==='zh'?'en':'zh';localStorage.setItem('st-l',L);apply(L)}
+function apply(l){
+  document.querySelector('.lang-btn').textContent=l==='zh'?'EN':'中文';
+  document.documentElement.lang=l==='zh'?'zh-CN':'en';
+  document.querySelectorAll('[data-i18n]').forEach(e=>{
+    const k=e.getAttribute('data-i18n');
+    if(T[l][k]){
+      if(T[l][k].includes('<'))e.innerHTML=T[l][k];
+      else e.textContent=T[l][k];
+    }
   });
 }
 </script>
