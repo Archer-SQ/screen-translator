@@ -4,215 +4,155 @@
 
 <h1 align="center">Screen Translator</h1>
 
-<p align="center">
-  <strong>Instant screen translation overlay for macOS</strong>
-</p>
+<p align="center">macOS 屏幕翻译工具 — 一键截屏、OCR、翻译、像素级覆盖</p>
 
 <p align="center">
-  One hotkey. Screenshot. OCR. Translate. Overlay. Seamless.
-</p>
-
-<p align="center">
-  <a href="#installation">Installation</a> &bull;
-  <a href="#features">Features</a> &bull;
-  <a href="#usage">Usage</a> &bull;
-  <a href="#configuration">Configuration</a> &bull;
-  <a href="#development">Development</a>
+  <a href="https://github.com/Archer-SQ/screen-translator/releases">下载</a> · 
+  <a href="https://archer-sq.github.io/screen-translator/">官网</a> · 
+  <a href="#english">English</a>
 </p>
 
 ---
 
-## What is Screen Translator?
+## 这是什么？
 
-Screen Translator captures your screen, detects text via macOS native OCR, translates it through your preferred translation service, and overlays the translated text directly on top of the original — pixel-perfect, as if the app was natively localized.
+Screen Translator 可以一键截取屏幕内容，通过 macOS 原生 OCR 识别文字，调用翻译 API，然后将译文直接覆盖在原文位置上 — 像素级还原，仿佛应用本身就是你的语言。
 
-No copy-pasting. No switching windows. Just press a hotkey and read your screen in your language.
+不需要复制粘贴，不需要切换窗口。按下快捷键，直接阅读。
 
-## Features
+## 特性
 
-- **One-Key Translation** — Press `Shift+Z+X` to capture, OCR, translate, and overlay in one step
-- **Pixel-Perfect Overlay** — Canvas-based rendering matches original font size, background color, and position
-- **Free by Default** — Google Translate built-in, no API key required
-- **Multiple Providers** — Google (free), OpenAI, Anthropic/Claude, DeepL, Ollama (local)
-- **Native macOS OCR** — Uses Apple Vision framework for fast, accurate text detection
-- **Accessibility Enhanced** — Combines OCR with macOS Accessibility API for precise text positioning
-- **Smart Caching** — Save translations with `Shift+S` for instant re-display
-- **Auto Proxy Detection** — Reads macOS system proxy settings automatically
-- **Pure Tray App** — Lives in your menu bar, no dock icon, no window clutter
-- **Configurable Hotkeys** — Customize all keyboard shortcuts in Settings
+- **一键翻译** — `Shift+Z+X` 完成截屏、识别、翻译、覆盖全流程
+- **像素级覆盖** — Canvas 直接绘制，自动匹配字号、背景色和位置
+- **开箱即用** — 内置 Google 翻译，无需 API Key
+- **多种引擎** — Google（免费）、OpenAI、Anthropic/Claude、DeepL、Ollama（本地）
+- **原生 OCR** — 基于 Apple Vision 框架，识别速度快、精度高
+- **辅助增强** — 结合 macOS Accessibility API 精确定位文字元素
+- **翻译缓存** — `Shift+S` 保存翻译结果，相同内容瞬间显示
+- **自动代理** — 自动读取 macOS 系统代理设置
+- **纯托盘应用** — 常驻菜单栏，不占 Dock 位置
+- **快捷键可配** — 所有键位均可在设置中自定义
 
-## Installation
+## 安装
 
-### Download
+### 下载安装
 
-Download the latest release from [Releases](https://github.com/user/screen-translator/releases).
+从 [Releases](https://github.com/Archer-SQ/screen-translator/releases) 下载最新版本。
 
-### Build from Source
+### 从源码构建
 
 ```bash
-# Clone
-git clone https://github.com/user/screen-translator.git
+git clone https://github.com/Archer-SQ/screen-translator.git
 cd screen-translator
-
-# Install dependencies
 npm install
-
-# Build & run
 npm run dev
+```
 
-# Package as .app
+打包为 .app：
+
+```bash
 npx electron-builder --mac --dir
-# Output: dist/mac-arm64/Screen Translator.app
+# 输出：dist/mac-arm64/Screen Translator.app
 ```
 
-### Requirements
+### 系统要求
 
-- macOS 13.0+ (Ventura or later)
-- **Screen Recording** permission (for screenshot capture)
-- **Accessibility** permission (for global hotkeys and text detection)
+- macOS 13.0+（Ventura 或更高）
+- 需要授予 **屏幕录制** 权限（用于截屏）
+- 需要授予 **辅助功能** 权限（用于全局快捷键和文字检测）
 
-## Usage
+## 使用方法
 
-### Quick Start
+1. 启动应用 — 菜单栏出现 **T** 图标
+2. 按 **Shift + Z + X** 翻译当前屏幕
+3. 按 **ESC** 或点击任意位置关闭浮层
+4. 在浮层显示时按 **Shift + S** 缓存当前翻译
 
-1. Launch Screen Translator — it appears as a **T** icon in your menu bar
-2. Press **Shift + Z + X** to translate your screen
-3. Press **ESC** or click anywhere to dismiss the overlay
-4. Press **Shift + S** while overlay is visible to cache the translation
+| 快捷键 | 功能 |
+|--------|------|
+| `Shift + Z + X` | 截屏翻译 |
+| `ESC` | 关闭浮层 / 取消翻译 |
+| `Shift + S` | 缓存当前翻译 |
 
-### Keyboard Shortcuts
+所有快捷键均可在设置中修改。
 
-| Shortcut | Action |
-|----------|--------|
-| `Shift + Z + X` | Capture & translate screen |
-| `ESC` | Dismiss overlay / Cancel translation |
-| `Shift + S` | Save current translation to cache |
+## 翻译服务
 
-All shortcuts are configurable in Settings.
+| 服务 | 需要 API Key | 说明 |
+|------|:---:|------|
+| **Google 翻译** | 否 | 免费内置，自动检测系统代理 |
+| **OpenAI 兼容** | 是 | 支持 GPT-4o-mini，可自定义端点 |
+| **Anthropic 兼容** | 是 | Claude、MiniMax 等 |
+| **DeepL** | 是 | 欧洲语言翻译质量极高 |
+| **Ollama** | 否 | 本地模型，完全离线运行 |
 
-### Tray Menu
-
-Right-click (or click) the **T** menu bar icon to access:
-
-- **Translate** — Trigger translation manually
-- **Hide** — Dismiss current overlay
-- **Clear Cache** — Remove all cached translations
-- **Settings** — Open configuration window
-- **Quit** — Exit the application
-
-## Configuration
-
-Open **Settings** from the tray menu to configure:
-
-### Translation Provider
-
-| Provider | API Key Required | Notes |
-|----------|:---:|-------|
-| **Google Translate** | No | Free, auto-detects system proxy |
-| **OpenAI Compatible** | Yes | GPT-4o-mini default, custom endpoint supported |
-| **Anthropic Compatible** | Yes | Claude, MiniMax, etc. |
-| **DeepL** | Yes | High quality European languages |
-| **Ollama** | No | Local models, requires Ollama running |
-
-### Target Language
-
-Supports all major languages: Chinese (Simplified/Traditional), Japanese, Korean, English, French, German, Spanish, and more.
-
-### Proxy Support
-
-Screen Translator automatically detects your macOS system proxy settings. No manual configuration needed — if your system proxy is set in **System Settings → Network → Proxies**, the app will use it.
-
-## How It Works
+## 工作原理
 
 ```
-Shift+Z+X
-    ↓
-┌─────────────┐
-│  Screenshot  │  macOS screencapture (no cursor)
-└──────┬──────┘
-       ↓
-┌──────┴──────┐
-│  OCR + AX   │  Vision framework + Accessibility API (parallel)
-└──────┬──────┘
-       ↓
-┌──────┴──────┐
-│   Filter    │  Remove target-language text, symbols, icons
-└──────┬──────┘
-       ↓
-┌──────┴──────┐
-│  Translate  │  Batch API calls (20 texts per batch)
-└──────┬──────┘
-       ↓
-┌──────┴──────┐
-│   Overlay   │  Canvas: sample background → erase → draw translated text
-└─────────────┘
+Shift+Z+X → 截屏 → OCR + AX 并行识别 → 过滤 → 分批翻译 → Canvas 绘制覆盖
 ```
 
-### Key Technical Details
+- **坐标系统**：OCR 返回物理像素，AX 返回逻辑像素，主进程统一归一化
+- **字号匹配**：用 `measureText()` 反推原始字号
+- **背景采样**：文字周围 14 点采样取中位数
+- **原生热键**：通过 `CGEventTap` 监听，绕过安全软件对 Electron 的拦截
 
-- **Coordinate System**: OCR returns physical pixels; Accessibility API returns CSS pixels. Both are normalized before rendering.
-- **Font Size Matching**: The original font size is reverse-engineered by measuring the original text against bounding box width using `measureText()`.
-- **Background Sampling**: 14 points around each text block are sampled to determine the median background color.
-- **Native Hotkeys**: Uses macOS `CGEventTap` for reliable global hotkey capture, bypassing restrictions that block Electron's `globalShortcut`.
-
-## Development
-
-### Project Structure
+## 项目结构
 
 ```
-src/main/            Electron main process (TypeScript)
-  index.ts           Entry point: translation flow orchestration
-  screenshot.ts      Screen capture
-  ocr.ts             Vision framework OCR wrapper
-  accessibility.ts   macOS Accessibility API wrapper
-  translator.ts      Translation provider dispatcher
-  providers/         google | openai | claude | deepl | ollama
-  overlay.ts         Overlay window management
-  hotkey.ts          Native hotkey process manager
-  tray.ts            System tray menu
-  config.ts          Configuration (~/Library/Application Support/)
+src/main/            主进程（TypeScript）
+  index.ts           翻译流程编排
+  providers/         翻译服务：google | openai | claude | deepl | ollama
+  overlay.ts         覆盖层窗口管理
+  hotkey.ts          原生热键进程管理
+  ocr.ts / accessibility.ts  文字识别
 
-src/renderer/        Renderer (plain HTML/JS)
-  overlay.html/js    Canvas-based translation overlay
-  settings.html/js   Settings UI with i18n (CN/EN)
+src/renderer/        渲染层（HTML/JS）
+  overlay.html/js    Canvas 绘制翻译覆盖
+  settings.html/js   设置界面（中英双语）
 
-scripts/             Native macOS tools (Objective-C)
-  ocr-macos.m        Vision framework OCR
-  hotkey-macos.m     CGEventTap global hotkey monitor
-  axtext-macos.m     Accessibility API text reader
+scripts/             原生 macOS 工具（Objective-C）
+  ocr-macos.m        Vision 框架 OCR
+  hotkey-macos.m     CGEventTap 全局热键
+  axtext-macos.m     Accessibility API 文字读取
 ```
 
-### Commands
-
-```bash
-npm run dev          # Build + launch
-npm run build        # TypeScript compile only
-npm start            # Build + launch (same as dev)
-npx electron .       # Launch without rebuild
-```
-
-### Native Tools
-
-The Objective-C tools are compiled automatically on first run. To compile manually:
-
-```bash
-clang -O2 scripts/ocr-macos.m -o scripts/ocr-macos \
-  -framework Foundation -framework Vision -framework AppKit -fobjc-arc
-
-clang -O2 scripts/hotkey-macos.m -o scripts/hotkey-macos \
-  -framework Foundation -framework Carbon -framework AppKit -fobjc-arc
-
-clang -O2 scripts/axtext-macos.m -o scripts/axtext-macos \
-  -framework Foundation -framework AppKit -framework ApplicationServices -fobjc-arc
-```
-
-## License
+## 开源协议
 
 MIT
 
+---
+
+<h2 id="english">English</h2>
+
+Screen Translator is a macOS tool that captures your screen, detects text via native OCR, translates it, and overlays the translated text pixel-perfectly on top of the original — as if the app was natively localized.
+
+### Quick Start
+
+```bash
+git clone https://github.com/Archer-SQ/screen-translator.git
+cd screen-translator && npm install && npm run dev
+```
+
+### Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Shift + Z + X` | Capture & translate |
+| `ESC` | Dismiss overlay |
+| `Shift + S` | Cache translation |
+
+### Providers
+
+Google Translate (free, built-in) · OpenAI · Anthropic/Claude · DeepL · Ollama (local)
+
+### Requirements
+
+macOS 13.0+ · Screen Recording permission · Accessibility permission
+
+For full documentation, see the Chinese section above or visit the [website](https://archer-sq.github.io/screen-translator/).
+
 ## Acknowledgments
 
-- [google-translate-api-x](https://github.com/AidanWelch/google-translate-api) — Free Google Translate API
-- [Electron](https://www.electronjs.org/) — Cross-platform desktop framework
-- Apple Vision Framework — Native macOS OCR
-- Apple Accessibility API — UI element text detection
+- [google-translate-api-x](https://github.com/AidanWelch/google-translate-api) — Free Google Translate
+- [Electron](https://www.electronjs.org/) — Desktop framework
