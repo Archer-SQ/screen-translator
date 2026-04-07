@@ -27,8 +27,9 @@ int main(int argc, const char *argv[]) {
 
         VNRecognizeTextRequest *request = [[VNRecognizeTextRequest alloc] init];
         request.recognitionLevel = VNRequestTextRecognitionLevelAccurate;
-        request.recognitionLanguages = @[@"en", @"zh-Hans", @"zh-Hant", @"ja", @"ko",
-                                          @"fr", @"de", @"es", @"pt", @"it", @"ru"];
+        // CJK first — Vision prioritizes by order; en first misreads Chinese as Latin
+        request.recognitionLanguages = @[@"zh-Hans", @"zh-Hant", @"ja", @"ko",
+                                          @"en", @"fr", @"de", @"es", @"pt", @"it", @"ru"];
         request.usesLanguageCorrection = YES;
 
         VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithCGImage:cgImage options:@{}];

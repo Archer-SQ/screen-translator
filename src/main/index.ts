@@ -251,16 +251,15 @@ function filterForeignBlocks(blocks: TextBlock[], targetLang: string): TextBlock
   return blocks.filter(block => {
     const text = block.text.trim();
     if (text.length <= 1) return false;
-    // Skip low-confidence OCR results (likely garbled from icons/small text)
     if (block.confidence < 0.3) return false;
 
-    // Skip icons, symbols, pure numbers, URLs, file extensions, hex strings
     if (/^[\d\s.,:;!?@#$%^&*()\-+=<>{}[\]|/\\~`'"•●○◆★☆✓✗→←↑↓©®™℃°…]+$/.test(text)) return false;
     if (/^https?:\/\//.test(text)) return false;
-    if (/^\.\w{1,4}$/.test(text)) return false; // .pdf, .jpg etc
-    if (/^[0-9a-f]{6,}$/i.test(text)) return false; // hex hashes
-    if (/^[\d.]+[KMGTkmgt]?[Bb]?\/s?$/.test(text)) return false; // 0.0M/s
-    if (text.length <= 2 && !/[a-zA-Z]{2}/.test(text)) return false; // very short non-word
+    if (/^\.\w{1,4}$/.test(text)) return false;
+    if (/^[0-9a-f]{6,}$/i.test(text)) return false;
+    if (/^[\d.]+[KMGTkmgt]?[Bb]?\/s?$/.test(text)) return false;
+    const hasCJK = /[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/.test(text);
+    if (text.length <= 2 && !hasCJK && !/[a-zA-Z]{2}/.test(text)) return false;
 
     if (targetPrefix === 'zh') {
       const chineseChars = text.match(/[\u4e00-\u9fff]/g)?.length || 0;

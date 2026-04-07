@@ -31,25 +31,24 @@ window.api.onShowTranslation((data) => {
       const fontFamily = '-apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif';
       const originalFontSize = detectOriginalFontSize(block.text, w, h, weight, fontFamily);
 
+      // Shrink to fit, but no smaller than 60% of original
+      const minFontSize = Math.max(10, Math.floor(originalFontSize * 0.6));
       let fontSize = originalFontSize;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
-      while (fontSize > 10 && ctx.measureText(block.translated).width > w + 4) {
+      while (fontSize > minFontSize && ctx.measureText(block.translated).width > w) {
         fontSize--;
         ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       }
 
-      // 2. Erase original text
+      // 2. Erase original text (only original bounding box, don't expand)
       const pad = 2;
 
-      // Step A: sample background color from edges of clean screenshot
       const cleanCtx = clean.getContext('2d');
       const bgColor = sampleEdgeColor(cleanCtx, x, y, w, h);
 
-      // Step B: solid fill to completely cover original text
       ctx.fillStyle = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
       ctx.fillRect(x - pad, y - pad, w + pad * 2, h + pad * 2);
 
-      // Step C: blur the filled area to blend edges with surroundings
       const blurR = Math.max(2, Math.round(h * 0.15));
       ctx.save();
       ctx.beginPath();
@@ -69,7 +68,7 @@ window.api.onShowTranslation((data) => {
       ctx.fillStyle = textColor;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       ctx.textBaseline = 'middle';
-      ctx.fillText(block.translated, x, y + h / 2);
+      ctx.fillText(block.translated, x, y + h / 2, w);
     });
   };
 
@@ -81,19 +80,26 @@ window.api.onClear(() => {
 });
 
 function detectOriginalFontSize(originalText, boxWidth, boxHeight, weight, fontFamily) {
-  let bestSize = Math.floor(boxHeight * 0.7);
+  // Primary signal: box height (most reliable, language-independent)
+  const heightBased = Math.round(boxHeight * 0.75);
 
-  for (let size = Math.ceil(boxHeight * 1.1); size >= 8; size--) {
-    ctx.font = `${weight} ${size}px ${fontFamily}`;
-    if (ctx.measureText(originalText).width <= boxWidth * 1.08) {
-      bestSize = size;
-      break;
+  // Secondary: try to match original text width (only if text is long enough to be meaningful)
+  let widthBased = heightBased;
+  if (originalText.length >= 4) {
+    for (let size = Math.ceil(boxHeight * 1.1); size >= 8; size--) {
+      ctx.font = `${weight} ${size}px ${fontFamily}`;
+      if (ctx.measureText(originalText).width <= boxWidth * 1.08) {
+        widthBased = size;
+        break;
+      }
     }
   }
 
+  // Use the larger of the two — avoids tiny text when short CJK maps to wide box
+  const best = Math.max(heightBased, widthBased);
   const minSize = Math.floor(boxHeight * 0.5);
   const maxSize = Math.ceil(boxHeight * 0.95);
-  return Math.max(minSize, Math.min(maxSize, bestSize));
+  return Math.max(minSize, Math.min(maxSize, best));
 }
 
 // Sample average color from the edges around a text block
