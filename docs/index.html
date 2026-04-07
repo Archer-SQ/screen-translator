@@ -58,21 +58,19 @@
       padding:72px 24px 24px;text-align:center;
     }
     .hero h1{
-      font-size:44px;font-weight:700;
-      letter-spacing:-2px;line-height:1.1;
-      margin-bottom:16px;
-      background:linear-gradient(135deg,#fff 0%,#999 100%);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-      background-clip:text;
+      font-size:40px;font-weight:700;
+      letter-spacing:-1.5px;line-height:1.15;
+      margin-bottom:20px;
+      color:var(--fg);
     }
     .hero .pain{
-      font-size:16px;color:var(--fg-2);line-height:1.7;
-      max-width:520px;margin:0 auto 12px;
+      font-size:15px;color:var(--fg-2);line-height:1.8;
+      max-width:440px;margin:0 auto 16px;
     }
-    .hero .pain strong{color:var(--fg);font-weight:600}
+    .hero .pain strong{color:var(--fg);font-weight:500}
     .hero .solution{
-      font-size:14px;color:var(--accent);font-weight:500;
-      margin-bottom:32px;
+      font-size:13px;color:var(--accent);font-weight:400;
+      margin-bottom:32px;letter-spacing:0.5px;
     }
     @media(max-width:600px){
       .hero{padding:56px 20px 20px}
@@ -326,8 +324,8 @@
   </div>
   <div class="demo-trigger">
     <button class="demo-btn" id="demoBtn" onclick="triggerDemo()">
-      <span data-i18n="demo.try">点击体验翻译效果</span>
-      <span class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></span>
+      <span id="demoBtnText" data-i18n="demo.try">点击体验翻译效果</span>
+      <span class="keys" id="demoBtnKeys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></span>
     </button>
   </div>
 </section>
@@ -422,7 +420,7 @@ zh:{
 'h.t':'任何应用，一键汉化',
 'h.pain':'游戏没有中文版？开发工具全是英文菜单？<br><strong>浏览器能翻译网页，但翻译不了应用。</strong><br>Screen Translator 帮你一键截屏识别，译文直接覆盖原文，像素级还原。',
 'h.sol':'不用拍照，不用复制粘贴，不用切换窗口。',
-'demo.try':'点击体验翻译效果',
+'demo.try':'点击体验翻译效果','demo.restore':'还原',
 'p.1':'快捷键','p.2':'截屏','p.3':'识别','p.4':'翻译','p.5':'覆盖','p.6':'像素级还原',
 'f.t':'为什么选择 Screen Translator','f.s':'专为浏览器翻译不了的场景而生',
 'f1.t':'任何应用都能翻译','f1.d':'不限于浏览器 — 开发工具、设计软件、游戏界面，只要屏幕上有文字就能翻译。',
@@ -442,7 +440,7 @@ en:{
 'h.t':'Any app, instantly translated',
 'h.pain':'Game has no localization? Dev tools all in English?<br><strong>Browsers can translate web pages, but not apps.</strong><br>Screen Translator can — one hotkey to capture, OCR, and overlay translations pixel-perfectly.',
 'h.sol':'No screenshots to share. No copy-pasting. No window switching.',
-'demo.try':'Click to see it in action',
+'demo.try':'Click to see it in action','demo.restore':'Restore',
 'p.1':'Hotkey','p.2':'Capture','p.3':'Detect','p.4':'Translate','p.5':'Overlay','p.6':'Pixel-perfect',
 'f.t':'Why Screen Translator','f.s':'Built for what browser translation can\'t reach',
 'f1.t':'Translate any application','f1.d':'Not just browsers — dev tools, design apps, game UIs. If there\'s text on screen, it can be translated.',
@@ -481,12 +479,16 @@ const btn=document.getElementById('demoBtn');
 let demoRunning=false;
 let isTranslated=false;
 
+const btnText=document.getElementById('demoBtnText');
+const btnKeys=document.getElementById('demoBtnKeys');
+
 function triggerDemo(){
   if(demoRunning) return;
   if(isTranslated){
     dw.classList.remove('translated');
     isTranslated=false;
-    btn.classList.remove('active');
+    btnText.textContent=T[L]['demo.try'];
+    btnKeys.style.display='';
     return;
   }
   demoRunning=true;
@@ -502,6 +504,8 @@ function triggerDemo(){
         isTranslated=true;
         demoRunning=false;
         btn.classList.remove('active');
+        btnText.textContent=T[L]['demo.restore'];
+        btnKeys.style.display='none';
       },300);
     }
     pct.textContent=Math.floor(p);

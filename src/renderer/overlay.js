@@ -10,6 +10,12 @@ window.api.onShowTranslation((data) => {
     canvas.height = img.height;
     ctx.drawImage(img, 0, 0);
 
+    // Keep a clean copy for background pixel copying
+    const clean = document.createElement('canvas');
+    clean.width = img.width;
+    clean.height = img.height;
+    clean.getContext('2d').drawImage(img, 0, 0);
+
     const scaleX = img.width / window.innerWidth;
     const scaleY = img.height / window.innerHeight;
 
@@ -19,17 +25,12 @@ window.api.onShowTranslation((data) => {
       const w = Math.round(block.width * scaleX);
       const h = Math.round(block.height * scaleY);
 
-      // 1. Sample background
-      const bgColor = sampleBackground(x, y, w, h);
-
-      // 2. Reverse-engineer the original font size from original text + box width
+      // 1. Detect font size first (need translated width before erasing)
       const isBold = h > 44;
       const weight = isBold ? 'bold' : 'normal';
       const fontFamily = '-apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif';
-
       const originalFontSize = detectOriginalFontSize(block.text, w, h, weight, fontFamily);
 
-      // 3. Use same font size for translation, shrink only if too wide
       let fontSize = originalFontSize;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       while (fontSize > 10 && ctx.measureText(block.translated).width > w + 4) {
@@ -37,20 +38,38 @@ window.api.onShowTranslation((data) => {
         ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       }
 
-      // 4. Erase original text
-      ctx.fillStyle = bgColor.css;
-      ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+      // 2. Erase original text
+      const pad = 2;
 
-      // 5. Draw translated text
-      const textColor = detectTextColor(bgColor);
+      // Step A: sample background color from edges of clean screenshot
+      const cleanCtx = clean.getContext('2d');
+      const bgColor = sampleEdgeColor(cleanCtx, x, y, w, h);
+
+      // Step B: solid fill to completely cover original text
+      ctx.fillStyle = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
+      ctx.fillRect(x - pad, y - pad, w + pad * 2, h + pad * 2);
+
+      // Step C: blur the filled area to blend edges with surroundings
+      const blurR = Math.max(2, Math.round(h * 0.15));
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x - pad - blurR, y - pad - blurR, w + (pad + blurR) * 2, h + (pad + blurR) * 2);
+      ctx.clip();
+      ctx.filter = `blur(${blurR}px)`;
+      ctx.drawImage(canvas,
+        x - pad - blurR, y - pad - blurR, w + (pad + blurR) * 2, h + (pad + blurR) * 2,
+        x - pad - blurR, y - pad - blurR, w + (pad + blurR) * 2, h + (pad + blurR) * 2
+      );
+      ctx.restore();
+
+      // 3. Draw translated text
+      const textColor = bgColor.brightness > 128
+        ? (bgColor.brightness > 200 ? '#1a1a1a' : '#000000')
+        : (bgColor.brightness < 50 ? '#e0e0e0' : '#ffffff');
       ctx.fillStyle = textColor;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       ctx.textBaseline = 'middle';
-
-      const textWidth = ctx.measureText(block.translated).width;
-      // Keep same horizontal alignment as original
-      const tx = textWidth <= w ? x : x; // left-aligned within the box
-      ctx.fillText(block.translated, tx, y + h / 2, w + 4);
+      ctx.fillText(block.translated, x, y + h / 2);
     });
   };
 
@@ -61,63 +80,58 @@ window.api.onClear(() => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
-// Reverse-engineer the font size that the original text was rendered at
-// by finding the font size where measureText(originalText).width ≈ boxWidth
 function detectOriginalFontSize(originalText, boxWidth, boxHeight, weight, fontFamily) {
-  // Start from a size based on box height, then binary search for best fit
-  let lo = 8, hi = Math.ceil(boxHeight * 1.1);
-  let bestSize = Math.floor(boxHeight * 0.7); // fallback
+  let bestSize = Math.floor(boxHeight * 0.7);
 
-  // Quick scan from high to low
-  for (let size = hi; size >= lo; size--) {
+  for (let size = Math.ceil(boxHeight * 1.1); size >= 8; size--) {
     ctx.font = `${weight} ${size}px ${fontFamily}`;
-    const measured = ctx.measureText(originalText).width;
-    if (measured <= boxWidth * 1.08) { // 8% tolerance for font differences
+    if (ctx.measureText(originalText).width <= boxWidth * 1.08) {
       bestSize = size;
       break;
     }
   }
 
-  // Clamp to reasonable range relative to box height
   const minSize = Math.floor(boxHeight * 0.5);
   const maxSize = Math.ceil(boxHeight * 0.95);
   return Math.max(minSize, Math.min(maxSize, bestSize));
 }
 
-function sampleBackground(x, y, w, h) {
-  const samples = [];
-  const m = 6;
+// Sample average color from the edges around a text block
+function sampleEdgeColor(cleanCtx, x, y, w, h) {
+  const m = 4;
   const points = [
-    [x + w * 0.2, y - m], [x + w * 0.5, y - m], [x + w * 0.8, y - m],
-    [x + w * 0.2, y + h + m], [x + w * 0.5, y + h + m], [x + w * 0.8, y + h + m],
-    [x - m, y + h * 0.3], [x - m, y + h * 0.7],
-    [x + w + m, y + h * 0.3], [x + w + m, y + h * 0.7],
-    [x - m, y - m], [x + w + m, y - m],
-    [x - m, y + h + m], [x + w + m, y + h + m],
+    [x - m, y], [x - m, y + h/2], [x - m, y + h],
+    [x + w + m, y], [x + w + m, y + h/2], [x + w + m, y + h],
+    [x, y - m], [x + w/2, y - m], [x + w, y - m],
+    [x, y + h + m], [x + w/2, y + h + m], [x + w, y + h + m],
   ];
-
-  for (const [sx, sy] of points) {
-    const px = Math.max(0, Math.min(Math.round(sx), canvas.width - 1));
-    const py = Math.max(0, Math.min(Math.round(sy), canvas.height - 1));
-    const pixel = ctx.getImageData(px, py, 1, 1).data;
-    samples.push({ r: pixel[0], g: pixel[1], b: pixel[2] });
+  let sr = 0, sg = 0, sb = 0, n = 0;
+  for (const [px, py] of points) {
+    const cx = Math.max(0, Math.min(Math.round(px), canvas.width - 1));
+    const cy = Math.max(0, Math.min(Math.round(py), canvas.height - 1));
+    const p = cleanCtx.getImageData(cx, cy, 1, 1).data;
+    sr += p[0]; sg += p[1]; sb += p[2]; n++;
   }
-
-  samples.sort((a, b) => (a.r + a.g + a.b) - (b.r + b.g + b.b));
-  const s = Math.floor(samples.length * 0.25), e = Math.floor(samples.length * 0.75);
-  const cluster = samples.slice(s, e);
-  const avg = cluster.reduce((a, c) => ({ r: a.r + c.r, g: a.g + c.g, b: a.b + c.b }), { r: 0, g: 0, b: 0 });
-  const n = cluster.length;
-  const r = Math.round(avg.r / n), g = Math.round(avg.g / n), b = Math.round(avg.b / n);
+  const r = Math.round(sr / n), g = Math.round(sg / n), b = Math.round(sb / n);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-  return { r, g, b, brightness, css: `rgb(${r},${g},${b})` };
+  return { r, g, b, brightness };
 }
 
-function detectTextColor(bgColor) {
-  if (bgColor.brightness > 128) {
-    return bgColor.brightness > 200 ? '#1a1a1a' : '#000000';
-  } else {
-    return bgColor.brightness < 50 ? '#e0e0e0' : '#ffffff';
+// Sample brightness from the edges around a text block
+function sampleBrightness(cleanCtx, x, y, w, h) {
+  const points = [
+    [x - 4, y + h / 2],
+    [x + w + 4, y + h / 2],
+    [x + w / 2, y - 4],
+    [x + w / 2, y + h + 4],
+  ];
+  let total = 0, count = 0;
+  for (const [px, py] of points) {
+    const cx = Math.max(0, Math.min(Math.round(px), canvas.width - 1));
+    const cy = Math.max(0, Math.min(Math.round(py), canvas.height - 1));
+    const p = cleanCtx.getImageData(cx, cy, 1, 1).data;
+    total += (p[0] * 299 + p[1] * 587 + p[2] * 114) / 1000;
+    count++;
   }
+  return total / count;
 }

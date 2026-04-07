@@ -94,22 +94,22 @@ app.whenReady().then(() => {
         updateTrayMenu();
       }
     },
-    // onSaveCache
+    // onSaveCache — save but keep overlay visible
     () => {
       if (isOverlayVisible() && pendingCacheKey && pendingCacheBlocks) {
-        if (translationCache.size >= MAX_CACHE_SIZE) {
-          const firstKey = translationCache.keys().next().value;
-          if (firstKey) translationCache.delete(firstKey);
+        if (!translationCache.has(pendingCacheKey)) {
+          if (translationCache.size >= MAX_CACHE_SIZE) {
+            const firstKey = translationCache.keys().next().value;
+            if (firstKey) translationCache.delete(firstKey);
+          }
+          translationCache.set(pendingCacheKey, { blocks: pendingCacheBlocks });
+          console.log(`[cache] Saved (Shift+S), hash: ${pendingCacheKey}`);
+        } else {
+          console.log(`[cache] Already cached, hash: ${pendingCacheKey}`);
         }
-        translationCache.set(pendingCacheKey, { blocks: pendingCacheBlocks });
-        console.log(`[cache] Saved (Shift+S), hash: ${pendingCacheKey}`);
-        pendingCacheKey = null;
-        pendingCacheBlocks = null;
-        hideOverlay();
-        sendHotkeyState('HIDDEN');
+        // Don't hide overlay — just show brief toast
         showLoading('Cached!');
         setTimeout(() => hideLoading(), 800);
-        updateTrayMenu();
       }
     },
     // onCancel — ESC or re-trigger during translating
@@ -186,7 +186,10 @@ async function handleTranslate() {
       console.log('[cache] HIT');
       if (activeProgressTimer) { clearInterval(activeProgressTimer); activeProgressTimer = null; }
       hideLoading();
-      showOverlay({ screenshotPath, blocks: translationCache.get(hash)!.blocks });
+      const cachedBlocks = translationCache.get(hash)!.blocks;
+      pendingCacheKey = hash;
+      pendingCacheBlocks = cachedBlocks;
+      showOverlay({ screenshotPath, blocks: cachedBlocks });
       sendHotkeyState('SHOWN');
       updateTrayMenu();
       return;

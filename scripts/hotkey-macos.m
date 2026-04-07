@@ -103,7 +103,8 @@ CGEventRef eventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef eve
             BOOL cacheMod = (cacheHK.modifier == 0) || ((flags & cacheHK.modifier) != 0);
             if (cacheMod && keycode == cacheHK.key1) {
                 printf("SAVE_CACHE\n"); fflush(stdout);
-                overlayMode = NO; lastActionTime = now;
+                // Keep overlayMode = YES — overlay stays visible after caching
+                lastActionTime = now;
                 tKey1Down = NO; tKey2Down = NO;
                 return event;
             }
