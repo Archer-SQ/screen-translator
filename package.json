@@ -1,0 +1,73 @@
+{
+  "name": "screen-translator",
+  "version": "1.0.0",
+  "description": "Screenshot, OCR, translate, and overlay — seamless screen translation tool",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron .",
+    "dev": "tsc && electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "google-translate-api-x": "^10.7.2",
+    "http-proxy-agent": "^9.0.0",
+    "https-proxy-agent": "^9.0.0",
+    "undici": "^8.0.2"
+  },
+  "build": {
+    "appId": "com.screen-translator.app",
+    "productName": "Screen Translator",
+    "mac": {
+      "icon": "resources/icon.icns",
+      "category": "public.app-category.utilities",
+      "target": "dir",
+      "extendInfo": {
+        "NSScreenCaptureUsageDescription": "Screen Translator needs screen capture permission to take screenshots for translation."
+      }
+    },
+    "files": [
+      "dist/main/**/*",
+      "dist/preload/**/*",
+      "src/renderer/**/*",
+      "!**/*.map",
+      "!node_modules/**/{test,tests,__tests__}/**",
+      "!node_modules/**/*.{md,ts,map}",
+      "!node_modules/**/{.github,LICENSE,CHANGELOG}*"
+    ],
+    "extraResources": [
+      {
+        "from": "scripts/ocr-macos",
+        "to": "scripts/ocr-macos"
+      },
+      {
+        "from": "scripts/ocr-macos.m",
+        "to": "scripts/ocr-macos.m"
+      },
+      {
+        "from": "scripts/hotkey-macos",
+        "to": "scripts/hotkey-macos"
+      },
+      {
+        "from": "scripts/hotkey-macos.m",
+        "to": "scripts/hotkey-macos.m"
+      },
+      {
+        "from": "scripts/axtext-macos",
+        "to": "scripts/axtext-macos"
+      },
+      {
+        "from": "scripts/axtext-macos.m",
+        "to": "scripts/axtext-macos.m"
+      }
+    ],
+    "asar": true
+  }
+}

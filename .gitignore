@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.map
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+.vscode/
+.idea/
+*.swp
+*.swo
+.env
+.env.local
+resources/icon.iconset/
