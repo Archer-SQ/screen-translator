@@ -191,7 +191,7 @@
 
     /* Pipeline */
     .pipeline{
-      max-width:700px;margin:0 auto 48px;
+      max-width:700px;margin:0 auto 32px;
       display:flex;align-items:center;justify-content:center;
       gap:0;padding:0 24px;
     }
@@ -284,10 +284,22 @@
 </div></nav>
 
 <section class="hero">
-  <h1 data-i18n="h.t">任何应用，一键汉化</h1>
-  <p class="sub" data-i18n="h.sub">浏览器能翻译网页，但翻译不了应用。Screen Translator 可以。</p>
-
+  <h1 data-i18n="h.t">屏幕上的文字，一键翻译</h1>
+  <p class="sub" data-i18n="h.sub">截屏、识别、翻译、原位覆盖，一步到位。</p>
 </section>
+
+<!-- Pipeline moved above demo -->
+<div class="pipeline">
+  <div class="pipe-step"><strong data-i18n="p.1">快捷键</strong><span>Shift+Z+X</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.2">截屏</strong><span>screencapture</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.3">识别</strong><span>Vision + AX</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.4">翻译</strong><span>Google / API</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.5">覆盖</strong><span data-i18n="p.6">像素级还原</span></div>
+</div>
 
 <!-- Interactive Demo -->
 <section class="demo-sec">
@@ -324,18 +336,6 @@
     </button>
   </div>
 </section>
-
-<div class="pipeline">
-  <div class="pipe-step"><strong data-i18n="p.1">快捷键</strong><span>Shift+Z+X</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.2">截屏</strong><span>screencapture</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.3">识别</strong><span>Vision + AX</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.4">翻译</strong><span>Google / API</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.5">覆盖</strong><span data-i18n="p.6">像素级还原</span></div>
-</div>
 
 <hr class="divider">
 
@@ -412,8 +412,8 @@ npx electron-builder --mac --dir</div>
 const T={
 zh:{
 'n.feat':'特性','n.prov':'服务','n.inst':'安装','h.dl':'下载',
-'h.t':'任何应用，一键汉化',
-'h.sub':'浏览器能翻译网页，但翻译不了应用。Screen Translator 可以。',
+'h.t':'屏幕上的文字，一键翻译',
+'h.sub':'截屏、识别、翻译、原位覆盖，一步到位。',
 'demo.try':'点击体验翻译效果','demo.restore':'还原',
 'p.1':'快捷键','p.2':'截屏','p.3':'识别','p.4':'翻译','p.5':'覆盖','p.6':'像素级还原',
 'f.t':'为什么选择 Screen Translator','f.s':'专为浏览器翻译不了的场景而生',
@@ -431,8 +431,8 @@ zh:{
 },
 en:{
 'n.feat':'Features','n.prov':'Providers','n.inst':'Install','h.dl':'Download',
-'h.t':'Any app, instantly translated',
-'h.sub':'Browsers translate web pages, but not apps. Screen Translator can.',
+'h.t':'Translate anything on your screen',
+'h.sub':'Capture, detect, translate, and overlay — in one step.',
 'demo.try':'Click to see it in action','demo.restore':'Restore',
 'p.1':'Hotkey','p.2':'Capture','p.3':'Detect','p.4':'Translate','p.5':'Overlay','p.6':'Pixel-perfect',
 'f.t':'Why Screen Translator','f.s':'Built for what browser translation can\'t reach',
