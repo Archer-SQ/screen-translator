@@ -49,14 +49,20 @@
     /* Install tip dropdown */
     .dl-wrap{position:relative}
     .dl-tip{
-      display:none;position:absolute;top:0;right:-8px;
-      width:340px;padding:44px 16px 16px;
+      visibility:hidden;opacity:0;
+      position:absolute;top:calc(100% + 8px);right:0;
+      width:340px;padding:16px;
       background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);
       border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
-      font-size:12px;color:var(--fg-2);line-height:1.7;z-index:55;
+      font-size:12px;color:var(--fg-2);line-height:1.7;z-index:60;
+      transition:opacity .15s,visibility .15s;
+      pointer-events:none;
     }
-    .dl-wrap:hover .dl-tip,.dl-wrap:focus-within .dl-tip{display:block}
-    .nav-dl{position:relative;z-index:56}
+    /* Invisible bridge between button and panel */
+    .dl-tip::before{
+      content:'';position:absolute;top:-12px;left:0;right:0;height:12px;
+    }
+    .dl-wrap.open .dl-tip{visibility:visible;opacity:1;pointer-events:auto}
     .dl-tip strong{color:var(--fg);font-weight:500;display:block;margin-bottom:6px;font-size:13px}
     .dl-tip code{
       display:block;margin:8px 0;padding:8px 10px 24px;
@@ -513,13 +519,20 @@ function copyCmd(){
     lb.classList.add('copied');
   });
 }
-// Reset label when re-hovering
-document.querySelector('.dl-wrap').addEventListener('mouseenter',()=>{
+// Tooltip hover with delay (like mature component libraries)
+const dlWrap=document.querySelector('.dl-wrap');
+let tipTimer=null;
+function showTip(){clearTimeout(tipTimer);dlWrap.classList.add('open');
   const lb=document.getElementById('copyLabel');
   lb.textContent=T[L]['copy.label']||'点击复制';
   lb.classList.remove('copied');
   document.getElementById('xattrCmd').style.borderColor='';
-});
+}
+function hideTip(){tipTimer=setTimeout(()=>{dlWrap.classList.remove('open')},150);}
+dlWrap.addEventListener('mouseenter',showTip);
+dlWrap.addEventListener('mouseleave',hideTip);
+document.querySelector('.dl-tip').addEventListener('mouseenter',showTip);
+document.querySelector('.dl-tip').addEventListener('mouseleave',hideTip);
 
 // Interactive demo
 const dw=document.getElementById('demoWin');
