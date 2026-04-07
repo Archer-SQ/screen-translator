@@ -43,9 +43,35 @@
     .nav-dl{
       background:var(--accent);color:#fff!important;
       padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;
-      transition:box-shadow .2s;
+      transition:box-shadow .2s;position:relative;
     }
     .nav-dl:hover{box-shadow:0 0 20px var(--accent-glow);text-decoration:none!important}
+    /* Install tip dropdown */
+    .dl-wrap{position:relative}
+    .dl-tip{
+      display:none;position:absolute;top:36px;right:0;
+      width:340px;padding:16px;
+      background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+      font-size:12px;color:var(--fg-2);line-height:1.7;z-index:60;
+    }
+    .dl-wrap:hover .dl-tip{display:block}
+    .dl-tip strong{color:var(--fg);font-weight:500;display:block;margin-bottom:6px;font-size:13px}
+    .dl-tip code{
+      display:block;margin:8px 0;padding:8px 10px;
+      background:#111;border-radius:6px;
+      font-family:'SF Mono',Menlo,monospace;font-size:11px;
+      color:#e0e0e0;word-break:break-all;cursor:pointer;
+      border:1px solid rgba(255,255,255,0.06);
+      position:relative;
+    }
+    .dl-tip code:hover{border-color:var(--accent)}
+    .dl-tip code::after{
+      content:'复制';position:absolute;right:8px;top:50%;transform:translateY(-50%);
+      font-size:10px;color:var(--fg-3);font-family:-apple-system,sans-serif;
+    }
+    .dl-tip .steps{color:var(--fg-3);font-size:11px}
+    .dl-tip .steps span{color:var(--fg-2)}
     .lang-btn{
       background:none;border:1px solid rgba(255,255,255,0.12);color:var(--fg-3);
       padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;
@@ -278,7 +304,15 @@
     <a href="#providers" data-i18n="n.prov">服务</a>
     <a href="#install" data-i18n="n.inst">安装</a>
     <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a>
-    <a class="nav-dl" href="https://github.com/Archer-SQ/screen-translator/releases/download/v1.0.0/Screen.Translator-1.0.0-arm64.dmg" data-i18n="h.dl">下载</a>
+    <div class="dl-wrap">
+      <a class="nav-dl" href="https://github.com/Archer-SQ/screen-translator/releases/download/v1.0.0/Screen.Translator-1.0.0-arm64.dmg" data-i18n="h.dl">下载</a>
+      <div class="dl-tip">
+        <strong data-i18n="tip.t">安装提示</strong>
+        <p class="steps" data-i18n-html="tip.s"><span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：</p>
+        <code id="xattrCmd" onclick="copyCmd()">xattr -cr /Applications/Screen\ Translator.app</code>
+        <p class="steps" data-i18n="tip.e">然后重新打开即可（未签名应用需此步骤）</p>
+      </div>
+    </div>
     <button class="lang-btn" onclick="toggleLang()">EN</button>
   </div>
 </div></nav>
@@ -426,6 +460,7 @@ zh:{
 'pv.t':'翻译引擎','pv.s':'从免费到专业，从云端到本地',
 'g.d':'内置免费','o.d':'GPT-4o','a.d':'Claude 等','d.d':'专业质量','l.d':'完全离线','t.f':'免费',
 'sc.t':'快捷键','sc.s':'所有快捷键均可自定义',
+'tip.t':'安装提示','tip.s':'<span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：','tip.e':'然后重新打开即可（未签名应用需此步骤）',
 's1':'翻译屏幕','s2':'关闭浮层','s3':'缓存翻译',
 'i.t':'快速开始','i.b':'从源码构建',
 },
@@ -445,6 +480,7 @@ en:{
 'pv.t':'Translation Engines','pv.s':'From free to premium, cloud to local',
 'g.d':'Built-in free','o.d':'GPT-4o','a.d':'Claude, etc.','d.d':'Premium quality','l.d':'Fully offline','t.f':'Free',
 'sc.t':'Shortcuts','sc.s':'All customizable',
+'tip.t':'Install Guide','tip.s':'<span>1.</span> Download DMG → drag to Applications<br><span>2.</span> If "damaged" warning appears, open Terminal and paste:','tip.e':'Then reopen the app (required for unsigned apps)',
 's1':'Translate Screen','s2':'Dismiss Overlay','s3':'Cache Translation',
 'i.t':'Get Started','i.b':'Build from source',
 }};
@@ -461,6 +497,17 @@ function apply(l){
   document.querySelectorAll('[data-i18n-html]').forEach(e=>{
     const k=e.getAttribute('data-i18n-html');
     if(T[l][k]) e.innerHTML=T[l][k];
+  });
+}
+
+// Copy xattr command
+function copyCmd(){
+  navigator.clipboard.writeText('xattr -cr /Applications/Screen\\ Translator.app').then(()=>{
+    const c=document.getElementById('xattrCmd');
+    c.style.borderColor='var(--accent)';
+    c.setAttribute('data-copied','1');
+    const orig=c.style.cssText;
+    setTimeout(()=>{c.style.borderColor='';},1500);
   });
 }
 
