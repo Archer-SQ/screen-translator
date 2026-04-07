@@ -60,6 +60,11 @@
       background:none;border:1px solid var(--border-light);color:var(--fg-3);
       padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;
     }
+    .nav-dl{
+      background:var(--accent);color:var(--accent-fg)!important;
+      padding:4px 12px;border-radius:5px;font-size:12px;font-weight:600;
+    }
+    .nav-dl:hover{opacity:0.85;text-decoration:none!important}
     .lang-btn:hover{border-color:var(--fg-3);color:var(--fg-2)}
 
     /* Hero */
@@ -165,57 +170,86 @@
     .demo-sec{max-width:1024px;margin:0 auto 80px;padding:0 24px}
     .demo-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
     .demo-window{
-      width:100%;max-width:520px;
-      box-shadow:var(--shadow-card);border-radius:10px;overflow:hidden;
-      background:var(--bg);
+      position:relative;width:100%;max-width:620px;
+      box-shadow:0 0 0 1px rgba(0,0,0,0.12),0 8px 40px rgba(0,0,0,0.08);
+      border-radius:10px;overflow:hidden;
+      background:#1e1e1e;color:#ccc;font-size:13px;
+      display:grid;grid-template-columns:160px 1fr;grid-template-rows:auto 1fr;
     }
     .demo-titlebar{
-      display:flex;gap:6px;padding:10px 14px;
-      background:var(--bg-alt);border-bottom:1px solid var(--border-light);
+      grid-column:1/-1;display:flex;align-items:center;
+      padding:8px 14px;background:#2d2d2d;gap:8px;
     }
-    .demo-titlebar span{width:10px;height:10px;border-radius:50%;background:var(--border-light)}
-    .demo-body{padding:16px 20px;display:flex;flex-direction:column;gap:6px}
-    .demo-spacer{height:12px}
-    .demo-line{position:relative;display:inline-flex;font-size:14px;line-height:1.6}
+    .dt-dots{display:flex;gap:6px}
+    .dt-dots span{width:10px;height:10px;border-radius:50%}
+    .dt-dots span:nth-child(1){background:#ff5f57}
+    .dt-dots span:nth-child(2){background:#febc2e}
+    .dt-dots span:nth-child(3){background:#28c840}
+    .dt-title{flex:1;text-align:center;font-size:12px;color:#999;margin-right:48px}
+    .dt-spacer{width:0}
+    .demo-sidebar{
+      padding:12px 0;background:#252526;border-right:1px solid #333;
+      display:flex;flex-direction:column;gap:1px;
+    }
+    .demo-sidebar .demo-line{padding:6px 16px;font-size:13px}
+    .ds-active{background:#37373d}
+    .demo-content{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
+    .dc-title{font-size:16px!important;font-weight:600;color:#e0e0e0;margin-bottom:4px}
+    .demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .demo-select{
+      padding:3px 10px;border-radius:4px;background:#3c3c3c;border:1px solid #555;
+      font-size:12px;color:#ccc;white-space:nowrap;
+    }
+    .demo-toggle{
+      width:32px;height:18px;border-radius:9px;background:#555;position:relative;
+    }
+    .demo-toggle.on{background:#0072f5}
+    .demo-toggle::after{
+      content:'';position:absolute;top:2px;left:2px;
+      width:14px;height:14px;border-radius:50%;background:#fff;
+      transition:left .2s;
+    }
+    .demo-toggle.on::after{left:16px}
+
+    .demo-line{position:relative;display:inline-flex;line-height:1.6}
     .demo-orig{opacity:1;transition:opacity .3s}
     .demo-trans{
       position:absolute;left:0;top:0;
       opacity:0;transition:opacity .3s;
-      font-weight:500;
     }
     .demo-toast{
       position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-      background:rgba(0,0,0,0.8);color:#fff;
+      background:rgba(0,0,0,0.85);color:#fff;
       padding:8px 20px;border-radius:8px;
       font-size:13px;font-weight:500;
       opacity:0;transition:opacity .3s;
-      pointer-events:none;white-space:nowrap;
+      pointer-events:none;white-space:nowrap;z-index:2;
     }
-    .demo-window{position:relative}
-    .demo-hint{opacity:0.5;font-size:12px;color:var(--fg-3)}
+    .demo-hint{opacity:0.4;font-size:12px;color:var(--fg-3)}
 
-    /* Animation states */
+    @media(max-width:500px){
+      .demo-window{grid-template-columns:1fr;max-width:100%}
+      .demo-sidebar{display:none}
+    }
+
+    /* Animation */
     .demo-window.phase-toast .demo-toast{opacity:1}
     .demo-window.phase-done .demo-toast{opacity:0}
     .demo-window.phase-done .demo-orig{opacity:0}
     .demo-window.phase-done .demo-trans{opacity:1}
-
-    .demo-window.phase-done .dl-1 .demo-trans{transition-delay:.0s}
-    .demo-window.phase-done .dl-2 .demo-trans{transition-delay:.05s}
-    .demo-window.phase-done .dl-3 .demo-trans{transition-delay:.1s}
-    .demo-window.phase-done .dl-4 .demo-trans{transition-delay:.15s}
-    .demo-window.phase-done .dl-5 .demo-trans{transition-delay:.25s}
-    .demo-window.phase-done .dl-6 .demo-trans{transition-delay:.3s}
-    .demo-window.phase-done .dl-7 .demo-trans{transition-delay:.4s}
-    .demo-window.phase-done .dl-8 .demo-trans{transition-delay:.45s}
-    .demo-window.phase-done .dl-1 .demo-orig{transition-delay:.0s}
-    .demo-window.phase-done .dl-2 .demo-orig{transition-delay:.05s}
-    .demo-window.phase-done .dl-3 .demo-orig{transition-delay:.1s}
-    .demo-window.phase-done .dl-4 .demo-orig{transition-delay:.15s}
-    .demo-window.phase-done .dl-5 .demo-orig{transition-delay:.25s}
-    .demo-window.phase-done .dl-6 .demo-orig{transition-delay:.3s}
-    .demo-window.phase-done .dl-7 .demo-orig{transition-delay:.4s}
-    .demo-window.phase-done .dl-8 .demo-orig{transition-delay:.45s}
+    .demo-window.phase-done .dl-1 .demo-trans,.demo-window.phase-done .dl-1 .demo-orig{transition-delay:.0s}
+    .demo-window.phase-done .dl-2 .demo-trans,.demo-window.phase-done .dl-2 .demo-orig{transition-delay:.04s}
+    .demo-window.phase-done .dl-3 .demo-trans,.demo-window.phase-done .dl-3 .demo-orig{transition-delay:.08s}
+    .demo-window.phase-done .dl-4 .demo-trans,.demo-window.phase-done .dl-4 .demo-orig{transition-delay:.12s}
+    .demo-window.phase-done .dl-5 .demo-trans,.demo-window.phase-done .dl-5 .demo-orig{transition-delay:.16s}
+    .demo-window.phase-done .dl-6 .demo-trans,.demo-window.phase-done .dl-6 .demo-orig{transition-delay:.0s}
+    .demo-window.phase-done .dl-7 .demo-trans,.demo-window.phase-done .dl-7 .demo-orig{transition-delay:.06s}
+    .demo-window.phase-done .dl-8 .demo-trans,.demo-window.phase-done .dl-8 .demo-orig{transition-delay:.12s}
+    .demo-window.phase-done .dl-9 .demo-trans,.demo-window.phase-done .dl-9 .demo-orig{transition-delay:.18s}
+    .demo-window.phase-done .dl-10 .demo-trans,.demo-window.phase-done .dl-10 .demo-orig{transition-delay:.24s}
+    .demo-window.phase-done .dl-11 .demo-trans,.demo-window.phase-done .dl-11 .demo-orig{transition-delay:.30s}
+    .demo-window.phase-done .dl-12 .demo-trans,.demo-window.phase-done .dl-12 .demo-orig{transition-delay:.36s}
+    .demo-window.phase-done .dl-13 .demo-trans,.demo-window.phase-done .dl-13 .demo-orig{transition-delay:.42s}
 
     /* Footer */
     .footer{
@@ -235,6 +269,7 @@
     <a href="#providers" data-i18n="n.prov">服务</a>
     <a href="#install" data-i18n="n.inst">安装</a>
     <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a>
+    <a class="nav-dl" href="https://github.com/Archer-SQ/screen-translator/releases/latest" data-i18n="h.dl">下载</a>
     <button class="lang-btn" onclick="toggleLang()">EN</button>
   </div>
 </div></nav>
@@ -242,29 +277,56 @@
 <section class="hero">
   <h1 data-i18n="h.t">一键翻译你的屏幕</h1>
   <p class="sub" data-i18n="h.s">截屏、识别、翻译、覆盖 — 一气呵成。<br>像素级还原，仿佛应用本身就是你的语言。</p>
-  <div class="hero-btns">
-    <a class="btn btn-dark" href="https://github.com/Archer-SQ/screen-translator/releases/latest" data-i18n="h.dl">下载</a>
-  </div>
 </section>
 
-<!-- Demo animation -->
+<!-- Demo: simulated dev tool UI -->
 <section class="demo-sec">
   <div class="demo-wrap">
     <div class="demo-window">
-      <div class="demo-titlebar"><span></span><span></span><span></span></div>
-      <div class="demo-body">
-        <div class="demo-line dl-1"><span class="demo-orig">File</span><span class="demo-trans">文件</span></div>
-        <div class="demo-line dl-2"><span class="demo-orig">Edit</span><span class="demo-trans">编辑</span></div>
-        <div class="demo-line dl-3"><span class="demo-orig">View</span><span class="demo-trans">视图</span></div>
-        <div class="demo-line dl-4"><span class="demo-orig">Help</span><span class="demo-trans">帮助</span></div>
-        <div class="demo-spacer"></div>
-        <div class="demo-line dl-5"><span class="demo-orig">Welcome to Screen Translator</span><span class="demo-trans">欢迎使用 Screen Translator</span></div>
-        <div class="demo-line dl-6"><span class="demo-orig">Press Shift+Z+X to translate</span><span class="demo-trans">按 Shift+Z+X 开始翻译</span></div>
-        <div class="demo-spacer"></div>
-        <div class="demo-line dl-7"><span class="demo-orig">Settings</span><span class="demo-trans">设置</span></div>
-        <div class="demo-line dl-8"><span class="demo-orig">About</span><span class="demo-trans">关于</span></div>
+      <div class="demo-titlebar">
+        <div class="dt-dots"><span></span><span></span><span></span></div>
+        <div class="dt-title">Preferences</div>
+        <div class="dt-spacer"></div>
       </div>
-      <div class="demo-toast" data-i18n-html="demo.toast">Translating... 78%</div>
+      <div class="demo-sidebar">
+        <div class="demo-line dl-1"><span class="demo-orig">General</span><span class="demo-trans">通用</span></div>
+        <div class="demo-line dl-2 ds-active"><span class="demo-orig">Appearance</span><span class="demo-trans">外观</span></div>
+        <div class="demo-line dl-3"><span class="demo-orig">Keyboard</span><span class="demo-trans">键盘</span></div>
+        <div class="demo-line dl-4"><span class="demo-orig">Extensions</span><span class="demo-trans">扩展</span></div>
+        <div class="demo-line dl-5"><span class="demo-orig">Profiles</span><span class="demo-trans">配置</span></div>
+      </div>
+      <div class="demo-content">
+        <div class="demo-line dl-6 dc-title"><span class="demo-orig">Appearance</span><span class="demo-trans">外观</span></div>
+        <div class="demo-row">
+          <div class="demo-line dl-7"><span class="demo-orig">Color Theme</span><span class="demo-trans">颜色主题</span></div>
+          <div class="demo-select">Dark Modern</div>
+        </div>
+        <div class="demo-row">
+          <div class="demo-line dl-8"><span class="demo-orig">Font Family</span><span class="demo-trans">字体</span></div>
+          <div class="demo-select">Menlo, Monaco</div>
+        </div>
+        <div class="demo-row">
+          <div class="demo-line dl-9"><span class="demo-orig">Font Size</span><span class="demo-trans">字号</span></div>
+          <div class="demo-select">14</div>
+        </div>
+        <div class="demo-row">
+          <div class="demo-line dl-10"><span class="demo-orig">Tab Size</span><span class="demo-trans">缩进大小</span></div>
+          <div class="demo-select">2</div>
+        </div>
+        <div class="demo-row">
+          <div class="demo-line dl-11"><span class="demo-orig">Word Wrap</span><span class="demo-trans">自动换行</span></div>
+          <div class="demo-select">Off</div>
+        </div>
+        <div class="demo-row">
+          <div class="demo-line dl-12"><span class="demo-orig">Minimap Enabled</span><span class="demo-trans">启用小地图</span></div>
+          <div class="demo-toggle on"></div>
+        </div>
+        <div class="demo-row">
+          <div class="demo-line dl-13"><span class="demo-orig">Breadcrumbs</span><span class="demo-trans">面包屑导航</span></div>
+          <div class="demo-toggle on"></div>
+        </div>
+      </div>
+      <div class="demo-toast">Translating... 78%</div>
     </div>
     <div class="demo-hint">
       <div class="keys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div>
