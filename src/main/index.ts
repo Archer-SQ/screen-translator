@@ -76,6 +76,8 @@ app.whenReady().then(() => {
 
   createTray();
   ensureOverlayWindow(); // Pre-create for instant display
+  // Open settings on first launch so user knows the app is running
+  setTimeout(() => openSettings(), 500);
   setTranslateCallback(() => {
     const now = Date.now();
     if (isProcessing || isOverlayVisible() || now - lastTriggerTime < DEBOUNCE_MS) return;
