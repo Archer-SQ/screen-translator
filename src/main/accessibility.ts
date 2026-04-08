@@ -7,30 +7,24 @@ export interface AXTextBlock extends TextBlock {
   role: string;
 }
 
-export function getAccessibilityText(): Promise<AXTextBlock[]> {
+export function getAccessibilityText(pid?: number): Promise<AXTextBlock[]> {
   return new Promise((resolve, reject) => {
     const binaryPath = getBinaryPath();
 
-    // Compile if needed
     if (!fs.existsSync(binaryPath)) {
       const srcPath = binaryPath + '.m';
-      if (!fs.existsSync(srcPath)) {
-        resolve([]);
-        return;
-      }
+      if (!fs.existsSync(srcPath)) { resolve([]); return; }
       try {
         require('child_process').execFileSync('clang', [
           '-O2', srcPath, '-o', binaryPath,
           '-framework', 'Foundation', '-framework', 'AppKit',
           '-framework', 'ApplicationServices', '-fobjc-arc',
         ]);
-      } catch {
-        resolve([]);
-        return;
-      }
+      } catch { resolve([]); return; }
     }
 
-    execFile(binaryPath, [], { maxBuffer: 10 * 1024 * 1024, timeout: 5000 }, (error, stdout, stderr) => {
+    const args = pid ? [String(pid)] : [];
+    execFile(binaryPath, args, { maxBuffer: 10 * 1024 * 1024, timeout: 5000 }, (error, stdout, stderr) => {
       if (error) {
         console.log('[ax] Accessibility failed, will fallback to OCR:', stderr?.trim());
         resolve([]);

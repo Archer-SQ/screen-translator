@@ -160,9 +160,17 @@ async function handleTranslate() {
   const config = getConfig();
 
   try {
-    showLoading('Capturing... 5%');
+    // Capture frontmost app PID before showing any UI (for AX to query the right app)
+    const { execSync } = require('child_process');
+    let frontPid = 0;
+    try {
+      const pidStr = execSync("osascript -e 'tell application \"System Events\" to unix id of first process whose frontmost is true'", { timeout: 1000 }).toString().trim();
+      frontPid = parseInt(pidStr, 10) || 0;
+    } catch {}
 
-    // 1. Screenshot
+    // Screenshot — hide any UI first so it doesn't get captured
+    hideLoading();
+    await new Promise(r => setTimeout(r, 200));
     const screenshotPath = await takeScreenshot();
     showLoading('Processing... 15%');
     if (isCancelled) { if (activeProgressTimer) { clearInterval(activeProgressTimer); activeProgressTimer = null; }; cleanup(screenshotPath); return; }
@@ -173,7 +181,7 @@ async function handleTranslate() {
     showLoading('Detecting text... 25%');
     const [ocrBlocks, axBlocks] = await Promise.all([
       performOCR(screenshotPath),
-      getAccessibilityText(),
+      getAccessibilityText(frontPid),
     ]);
     showLoading('Analyzing... 40%');
     if (isCancelled) { if (activeProgressTimer) { clearInterval(activeProgressTimer); activeProgressTimer = null; }; cleanup(screenshotPath); return; }
@@ -270,6 +278,7 @@ function filterForeignBlocks(blocks: TextBlock[], targetLang: string): TextBlock
     if (text.length <= 1) return false;
     if (block.confidence < 0.3) return false;
 
+
     if (/^[\d\s.,:;!?@#$%^&*()\-+=<>{}[\]|/\\~`'"•●○◆★☆✓✗→←↑↓©®™℃°…]+$/.test(text)) return false;
     if (/^https?:\/\//.test(text)) return false;
     if (/^\.\w{1,4}$/.test(text)) return false;
@@ -298,52 +307,31 @@ function filterForeignBlocks(blocks: TextBlock[], targetLang: string): TextBlock
   });
 }
 
-function mergeAdjacentBlocks(blocks: TextBlock[]): TextBlock[] {
-  if (blocks.length <= 1) return blocks;
-
-  // Sort by Y position, then X
-  const sorted = [...blocks].sort((a, b) => a.y - b.y || a.x - b.x);
-  const merged: TextBlock[] = [];
-  let current = { ...sorted[0] };
-
-  for (let i = 1; i < sorted.length; i++) {
-    const next = sorted[i];
-    const verticalGap = next.y - (current.y + current.height);
-    const horizontalOverlap = Math.abs(current.x - next.x) < current.width * 0.3;
-    const similarHeight = Math.abs(current.height - next.height) < current.height * 0.5;
-    const isAdjacentLine = verticalGap >= 0 && verticalGap < current.height * 0.8
-                           && horizontalOverlap && similarHeight;
-
-    if (isAdjacentLine) {
-      // Merge: expand bounding box, concatenate text
-      const minX = Math.min(current.x, next.x);
-      const minY = current.y;
-      const maxX = Math.max(current.x + current.width, next.x + next.width);
-      const maxY = next.y + next.height;
-      current = {
-        text: current.text + ' ' + next.text,
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY,
-        confidence: Math.min(current.confidence, next.confidence),
-      };
-    } else {
-      merged.push(current);
-      current = { ...next };
-    }
-  }
-  merged.push(current);
-  return merged;
+function rectOverlapRatio(a: {x:number,y:number,width:number,height:number}, b: {x:number,y:number,width:number,height:number}): number {
+  const ix = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+  const iy = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+  const bArea = b.width * b.height;
+  return bArea > 0 ? (ix * iy) / bArea : 0;
 }
 
-// Refine OCR positions using Accessibility API data
+
 function refineWithAccessibility(
   ocrBlocks: TextBlock[],
   axBlocks: AXTextBlock[],
   scaleFactor: number
 ): TextBlock[] {
-  if (axBlocks.length === 0) return ocrBlocks;
+  // Filter garbled OCR blocks (icons misread as text)
+  const cleanOcr = ocrBlocks.filter(ocr => {
+    const text = ocr.text.trim();
+    // Skip icon-shaped blocks (small + square)
+    const r = ocr.width / Math.max(ocr.height, 1);
+    if (ocr.width < 40 * scaleFactor && ocr.height < 40 * scaleFactor && r > 0.5 && r < 2.0) return false;
+    // Skip garbled short text with mixed symbols (icon+text merge artifacts)
+    if (text.length <= 4 && /[+<>←→×✕✓✗■□●○◆★☆▶◀▲▼]/.test(text)) return false;
+    return true;
+  });
+
+  if (axBlocks.length === 0) return cleanOcr;
 
   // Convert AX logical coords to physical (to match OCR coordinate space)
   const axPhysical = axBlocks.map(b => ({
@@ -354,23 +342,28 @@ function refineWithAccessibility(
     height: b.height * scaleFactor,
   }));
 
-  return ocrBlocks.map(ocr => {
-    // Find best matching AX element by text similarity
+  const matchedAx = new Set<number>();
+
+  const refined = cleanOcr.map(ocr => {
     let bestMatch: typeof axPhysical[0] | null = null;
     let bestScore = 0;
+    let bestIdx = -1;
 
-    for (const ax of axPhysical) {
+    for (let i = 0; i < axPhysical.length; i++) {
+      const ax = axPhysical[i];
       const score = textSimilarity(ocr.text, ax.text);
       if (score > bestScore && score > 0.6) {
         bestScore = score;
         bestMatch = ax;
+        bestIdx = i;
       }
     }
 
-    if (bestMatch) {
-      // Use AX position (more precise), keep OCR text
+    if (bestMatch && bestIdx >= 0) {
+      matchedAx.add(bestIdx);
       return {
         ...ocr,
+        text: bestMatch.text, // AX text is clean — no icon glyphs
         x: bestMatch.x,
         y: bestMatch.y,
         width: bestMatch.width,
@@ -379,6 +372,28 @@ function refineWithAccessibility(
     }
     return ocr;
   });
+
+  // Add unmatched AX blocks — these are UI elements OCR missed or merged with icons
+  for (let i = 0; i < axPhysical.length; i++) {
+    if (matchedAx.has(i)) continue;
+    const ax = axPhysical[i];
+    const text = ax.text.trim();
+    if (text.length < 2) continue;
+    // Skip if it overlaps significantly with any existing OCR block
+    const overlaps = refined.some(r => rectOverlapRatio(r, ax) > 0.3);
+    if (!overlaps) {
+      refined.push({
+        text,
+        x: ax.x,
+        y: ax.y,
+        width: ax.width,
+        height: ax.height,
+        confidence: 0.8,
+      });
+    }
+  }
+
+  return refined;
 }
 
 function textSimilarity(a: string, b: string): number {

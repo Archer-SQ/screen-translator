@@ -1,6 +1,11 @@
 const canvas = document.getElementById('result');
 const ctx = canvas.getContext('2d');
 
+const MIN_FONT_RATIO = 0.6;
+const FONT_HEIGHT_RATIO = 0.75;
+const BLUR_RATIO = 0.15;
+const ERASE_PAD = 2;
+
 window.api.onShowTranslation((data) => {
   const { screenshotPath, blocks } = data;
 
@@ -10,7 +15,6 @@ window.api.onShowTranslation((data) => {
     canvas.height = img.height;
     ctx.drawImage(img, 0, 0);
 
-    // Keep a clean copy for background pixel copying
     const clean = document.createElement('canvas');
     clean.width = img.width;
     clean.height = img.height;
@@ -25,14 +29,12 @@ window.api.onShowTranslation((data) => {
       const w = Math.round(block.width * scaleX);
       const h = Math.round(block.height * scaleY);
 
-      // 1. Detect font size first (need translated width before erasing)
       const isBold = h > 44;
       const weight = isBold ? 'bold' : 'normal';
       const fontFamily = '-apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif';
       const originalFontSize = detectOriginalFontSize(block.text, w, h, weight, fontFamily);
 
-      // Shrink to fit, but no smaller than 60% of original
-      const minFontSize = Math.max(10, Math.floor(originalFontSize * 0.6));
+      const minFontSize = Math.max(10, Math.floor(originalFontSize * MIN_FONT_RATIO));
       let fontSize = originalFontSize;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       while (fontSize > minFontSize && ctx.measureText(block.translated).width > w) {
@@ -40,34 +42,33 @@ window.api.onShowTranslation((data) => {
         ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       }
 
-      // 2. Erase original text (only original bounding box, don't expand)
-      const pad = 2;
-
+      // Erase original text: solid fill + edge blur
       const cleanCtx = clean.getContext('2d');
       const bgColor = sampleEdgeColor(cleanCtx, x, y, w, h);
 
       ctx.fillStyle = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
-      ctx.fillRect(x - pad, y - pad, w + pad * 2, h + pad * 2);
+      ctx.fillRect(x - ERASE_PAD, y - ERASE_PAD, w + ERASE_PAD * 2, h + ERASE_PAD * 2);
 
-      const blurR = Math.max(2, Math.round(h * 0.15));
+      const blurR = Math.max(2, Math.round(h * BLUR_RATIO));
       ctx.save();
       ctx.beginPath();
-      ctx.rect(x - pad - blurR, y - pad - blurR, w + (pad + blurR) * 2, h + (pad + blurR) * 2);
+      ctx.rect(x - ERASE_PAD - blurR, y - ERASE_PAD - blurR, w + (ERASE_PAD + blurR) * 2, h + (ERASE_PAD + blurR) * 2);
       ctx.clip();
       ctx.filter = `blur(${blurR}px)`;
       ctx.drawImage(canvas,
-        x - pad - blurR, y - pad - blurR, w + (pad + blurR) * 2, h + (pad + blurR) * 2,
-        x - pad - blurR, y - pad - blurR, w + (pad + blurR) * 2, h + (pad + blurR) * 2
+        x - ERASE_PAD - blurR, y - ERASE_PAD - blurR, w + (ERASE_PAD + blurR) * 2, h + (ERASE_PAD + blurR) * 2,
+        x - ERASE_PAD - blurR, y - ERASE_PAD - blurR, w + (ERASE_PAD + blurR) * 2, h + (ERASE_PAD + blurR) * 2
       );
       ctx.restore();
 
-      // 3. Draw translated text
+      // Draw translated text with alignment detection
       const textColor = bgColor.brightness > 128
         ? (bgColor.brightness > 200 ? '#1a1a1a' : '#000000')
         : (bgColor.brightness < 50 ? '#e0e0e0' : '#ffffff');
       ctx.fillStyle = textColor;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       ctx.textBaseline = 'middle';
+
       ctx.fillText(block.translated, x, y + h / 2, w);
     });
   };
@@ -80,10 +81,8 @@ window.api.onClear(() => {
 });
 
 function detectOriginalFontSize(originalText, boxWidth, boxHeight, weight, fontFamily) {
-  // Primary signal: box height (most reliable, language-independent)
-  const heightBased = Math.round(boxHeight * 0.75);
+  const heightBased = Math.round(boxHeight * FONT_HEIGHT_RATIO);
 
-  // Secondary: try to match original text width (only if text is long enough to be meaningful)
   let widthBased = heightBased;
   if (originalText.length >= 4) {
     for (let size = Math.ceil(boxHeight * 1.1); size >= 8; size--) {
@@ -95,14 +94,10 @@ function detectOriginalFontSize(originalText, boxWidth, boxHeight, weight, fontF
     }
   }
 
-  // Use the larger of the two — avoids tiny text when short CJK maps to wide box
   const best = Math.max(heightBased, widthBased);
-  const minSize = Math.floor(boxHeight * 0.5);
-  const maxSize = Math.ceil(boxHeight * 0.95);
-  return Math.max(minSize, Math.min(maxSize, best));
+  return Math.max(Math.floor(boxHeight * 0.5), Math.min(Math.ceil(boxHeight * 0.95), best));
 }
 
-// Sample average color from the edges around a text block
 function sampleEdgeColor(cleanCtx, x, y, w, h) {
   const m = 4;
   const points = [
@@ -121,23 +116,4 @@ function sampleEdgeColor(cleanCtx, x, y, w, h) {
   const r = Math.round(sr / n), g = Math.round(sg / n), b = Math.round(sb / n);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return { r, g, b, brightness };
-}
-
-// Sample brightness from the edges around a text block
-function sampleBrightness(cleanCtx, x, y, w, h) {
-  const points = [
-    [x - 4, y + h / 2],
-    [x + w + 4, y + h / 2],
-    [x + w / 2, y - 4],
-    [x + w / 2, y + h + 4],
-  ];
-  let total = 0, count = 0;
-  for (const [px, py] of points) {
-    const cx = Math.max(0, Math.min(Math.round(px), canvas.width - 1));
-    const cy = Math.max(0, Math.min(Math.round(py), canvas.height - 1));
-    const p = cleanCtx.getImageData(cx, cy, 1, 1).data;
-    total += (p[0] * 299 + p[1] * 587 + p[2] * 114) / 1000;
-    count++;
-  }
-  return total / count;
 }
