@@ -57,6 +57,21 @@ app.whenReady().then(() => {
         buttons: ['OK'],
       });
     }
+
+    // Check Screen Recording permission
+    const hasScreenAccess = systemPreferences.getMediaAccessStatus('screen');
+    console.log(`Screen Recording: ${hasScreenAccess}`);
+    if (hasScreenAccess !== 'granted') {
+      dialog.showMessageBoxSync({
+        type: 'warning',
+        title: 'Screen Recording Permission',
+        message: 'Screen Translator needs Screen Recording permission to capture your screen.\n\nWithout this permission, screenshots will only show the desktop wallpaper.\n\nPlease grant permission in:\nSystem Settings → Privacy & Security → Screen Recording\n\nThen restart the app.',
+        buttons: ['Open Settings', 'Later'],
+      });
+      // Try to open the settings pane
+      const { exec } = require('child_process');
+      exec('open "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"');
+    }
   }
 
   createTray();
