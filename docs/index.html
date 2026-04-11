@@ -77,11 +77,35 @@
     .dl-tip code .copy-label.copied{color:var(--accent)}
     .dl-tip .steps{color:var(--fg-3);font-size:11px}
     .dl-tip .steps span{color:var(--fg-2)}
-    .lang-btn{
-      background:none;border:1px solid rgba(255,255,255,0.12);color:var(--fg-3);
-      padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;
+    .icon-btn{
+      display:flex;align-items:center;justify-content:center;
+      width:28px;height:28px;border-radius:6px;
+      color:var(--fg-2);cursor:pointer;
+      background:none;border:none;padding:0;
+      transition:background .15s,color .15s;
     }
-    .lang-btn:hover{border-color:var(--fg-3);color:var(--fg-2)}
+    .icon-btn:hover{background:rgba(255,255,255,0.06);color:var(--fg);text-decoration:none}
+    .icon-btn svg{width:18px;height:18px}
+    .lang-wrap{position:relative}
+    .lang-menu{
+      display:none;position:absolute;top:calc(100% + 6px);right:0;
+      min-width:120px;padding:4px;z-index:60;
+      background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    }
+    .lang-wrap.open .lang-menu{display:block}
+    .lang-menu button{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      width:100%;padding:8px 12px;border-radius:5px;
+      background:none;border:none;color:var(--fg-2);cursor:pointer;
+      font-size:13px;font-family:inherit;text-align:left;
+    }
+    .lang-menu button:hover{background:rgba(255,255,255,0.06);color:var(--fg)}
+    .lang-menu button .check{
+      color:var(--accent);opacity:0;font-size:14px;
+    }
+    .lang-menu button.active .check{opacity:1}
+    .lang-menu button.active{color:var(--fg)}
 
     /* Hero */
     .hero{
@@ -303,7 +327,6 @@
     <a href="#features" data-i18n="n.feat">特性</a>
     <a href="#providers" data-i18n="n.prov">服务</a>
     <a href="#install" data-i18n="n.inst">安装</a>
-    <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a>
     <div class="dl-wrap">
       <a class="nav-dl" href="https://github.com/Archer-SQ/screen-translator/releases/download/v1.2.0/Screen.Translator-1.2.0-arm64.dmg" data-i18n="h.dl">下载</a>
       <div class="dl-tip">
@@ -313,7 +336,18 @@
         <p class="steps" data-i18n="tip.e">然后重新打开即可（未签名应用需此步骤）</p>
       </div>
     </div>
-    <button class="lang-btn" onclick="toggleLang()">EN</button>
+    <a class="icon-btn" href="https://github.com/Archer-SQ/screen-translator" title="GitHub" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.58v-2.03c-3.34.73-4.04-1.42-4.04-1.42-.54-1.4-1.34-1.76-1.34-1.76-1.08-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.08 1.84 2.82 1.3 3.5 1 .1-.78.42-1.3.76-1.6-2.66-.3-5.47-1.33-5.47-5.93 0-1.3.47-2.38 1.24-3.22-.13-.3-.54-1.52.1-3.17 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.3-1.23 3.3-1.23.64 1.65.24 2.87.12 3.17.77.84 1.24 1.92 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .3"/></svg>
+    </a>
+    <div class="lang-wrap" id="langWrap">
+      <button class="icon-btn" onclick="toggleLangMenu()" title="Language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </button>
+      <div class="lang-menu">
+        <button id="langZh" onclick="setLang('zh')"><span>中文</span><span class="check">✓</span></button>
+        <button id="langEn" onclick="setLang('en')"><span>English</span><span class="check">✓</span></button>
+      </div>
+    </div>
   </div>
 </div></nav>
 
@@ -491,9 +525,21 @@ en:{
 }};
 let L=localStorage.getItem('st-l')||'zh';
 apply(L);
-function toggleLang(){L=L==='zh'?'en':'zh';localStorage.setItem('st-l',L);apply(L)}
+function toggleLangMenu(e){
+  const wrap=document.getElementById('langWrap');
+  wrap.classList.toggle('open');
+}
+function setLang(l){
+  L=l;localStorage.setItem('st-l',L);apply(L);
+  document.getElementById('langWrap').classList.remove('open');
+}
+document.addEventListener('click',(e)=>{
+  const wrap=document.getElementById('langWrap');
+  if(wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+});
 function apply(l){
-  document.querySelector('.lang-btn').textContent=l==='zh'?'EN':'中文';
+  document.getElementById('langZh').classList.toggle('active',l==='zh');
+  document.getElementById('langEn').classList.toggle('active',l==='en');
   document.documentElement.lang=l==='zh'?'zh-CN':'en';
   document.querySelectorAll('[data-i18n]').forEach(e=>{
     const k=e.getAttribute('data-i18n');
