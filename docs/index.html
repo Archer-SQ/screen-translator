@@ -435,6 +435,7 @@ npx electron-builder --mac --dir</div>
 </footer>
 
 <script>
+let currentMode='full';
 const T={
 zh:{
 'n.feat':'特性','n.prov':'服务','n.inst':'安装','h.dl':'下载',
@@ -533,14 +534,14 @@ const modeRegion=document.getElementById('modeRegion');
 const regionBox=document.getElementById('regionBox');
 const demoLabel=document.getElementById('demoLabel');
 
-let currentMode='full';
 function updateDemoLabel(){
-  if(!demoLabel) return;
+  const el=document.getElementById('demoLabel');
+  if(!el) return;
   const press=T[L]['demo.press'];
   if(currentMode==='full'){
-    demoLabel.innerHTML=`${press} <span class="kbd">Shift</span><span class="kbd">Z</span><span class="kbd">X</span> ${T[L]['demo.fsHint']}`;
+    el.innerHTML=`${press} <span class="kbd">Shift</span><span class="kbd">Z</span><span class="kbd">X</span> ${T[L]['demo.fsHint']}`;
   } else {
-    demoLabel.innerHTML=`${press} <span class="kbd">Shift</span><span class="kbd">Z</span><span class="kbd">C</span> ${T[L]['demo.regionHint']}`;
+    el.innerHTML=`${press} <span class="kbd">Shift</span><span class="kbd">Z</span><span class="kbd">C</span> ${T[L]['demo.regionHint']}`;
   }
 }
 
