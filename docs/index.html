@@ -165,6 +165,12 @@
     .demo-select{
       padding:4px 10px;border-radius:4px;background:#3c3c3c;border:1px solid #555;
       font-size:12px;color:#ccc;white-space:nowrap;flex-shrink:0;
+      position:relative;
+    }
+    .demo-select .d-orig{display:inline-block;transition:opacity .35s}
+    .demo-select .d-trans{
+      display:inline-block;position:absolute;left:10px;top:4px;
+      opacity:0;transition:opacity .35s;
     }
     .demo-toggle{width:32px;height:18px;border-radius:9px;position:relative;flex-shrink:0}
     .demo-toggle.on{background:#0072f5}
@@ -338,7 +344,7 @@
       </div>
       <div class="demo-content">
         <div class="dc-title"><span class="d-orig">Appearance</span><span class="d-trans">外观</span></div>
-        <div class="demo-row region-target" id="rtColor"><div class="d-label"><span class="d-orig">Color Theme</span><span class="d-trans">颜色主题</span></div><div class="demo-select">Dark Modern</div></div>
+        <div class="demo-row region-target" id="rtColor"><div class="d-label"><span class="d-orig">Color Theme</span><span class="d-trans">颜色主题</span></div><div class="demo-select"><span class="d-orig">Dark Modern</span><span class="d-trans">深色现代</span></div></div>
         <div class="demo-row"><div class="d-label"><span class="d-orig">Font Family</span><span class="d-trans">字体</span></div><div class="demo-select">Menlo, Monaco</div></div>
         <div class="demo-row"><div class="d-label"><span class="d-orig">Font Size</span><span class="d-trans">字号</span></div><div class="demo-select">14</div></div>
         <div class="demo-row"><div class="d-label"><span class="d-orig">Tab Size</span><span class="d-trans">缩进大小</span></div><div class="demo-select">2</div></div>
