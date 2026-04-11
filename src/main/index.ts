@@ -1,12 +1,14 @@
 import { app, screen, systemPreferences, dialog } from 'electron';
 import { takeScreenshot } from './screenshot';
-import { performOCR, TextBlock } from './ocr';
+import { performOCR, performOCRSplit, TextBlock } from './ocr';
 import { getAccessibilityText, AXTextBlock } from './accessibility';
 import { translate } from './translator';
 import { getConfig } from './config';
-import { ensureOverlayWindow, showOverlay, hideOverlay, isOverlayVisible, showLoading, hideLoading, showCancelled } from './overlay';
+import { ensureOverlayWindow, showOverlay, hideOverlay, isOverlayVisible, showLoading, hideLoading, showCancelled, setDismissCallback } from './overlay';
 import { createTray, openSettings, setTranslateCallback, setHideCallback, setClearCacheCallback, setOverlayVisibleFn, updateTrayMenu } from './tray';
 import { startHotkeyMonitor, stopHotkeyMonitor, restartWithHotkeys, sendHotkeyState } from './hotkey';
+import { showSelection } from './selection';
+import { showRegionOverlay } from './region-overlay';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 
@@ -76,6 +78,19 @@ app.whenReady().then(() => {
 
   createTray();
   ensureOverlayWindow(); // Pre-create for instant display
+
+  const dismissOverlay = () => {
+    if (isOverlayVisible()) {
+      hideOverlay();
+      sendHotkeyState('HIDDEN');
+      pendingCacheKey = null;
+      pendingCacheBlocks = null;
+      isProcessing = false;
+      updateTrayMenu();
+    }
+  };
+  setDismissCallback(dismissOverlay);
+
   // Open settings on first launch so user knows the app is running
   setTimeout(() => openSettings(), 500);
   setTranslateCallback(() => {
@@ -140,7 +155,17 @@ app.whenReady().then(() => {
         updateTrayMenu();
       }
     },
-    { trigger: getConfig().hotkey, dismiss: getConfig().dismissKey, cache: getConfig().cacheKey }
+    // onRegion — region translate
+    () => {
+      if (isProcessing || isOverlayVisible()) return;
+      handleRegionTranslate();
+    },
+    {
+      trigger: getConfig().hotkey,
+      dismiss: getConfig().dismissKey,
+      cache: getConfig().cacheKey,
+      region: getConfig().regionKey,
+    }
   );
 
   const config = getConfig();
@@ -168,25 +193,27 @@ async function handleTranslate() {
       frontPid = parseInt(pidStr, 10) || 0;
     } catch {}
 
+    // Detect which display the cursor is on — translate that screen, not always primary
+    const cursorPoint = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint(cursorPoint);
+    const scaleFactor = display.scaleFactor;
+
     // Screenshot — hide any UI first so it doesn't get captured
     hideLoading();
     await new Promise(r => setTimeout(r, 200));
-    const screenshotPath = await takeScreenshot();
+    const screenshotPath = await takeScreenshot(display.bounds);
     showLoading('Processing... 15%');
     if (isCancelled) { if (activeProgressTimer) { clearInterval(activeProgressTimer); activeProgressTimer = null; }; cleanup(screenshotPath); return; }
 
-    const display = screen.getPrimaryDisplay();
-    const scaleFactor = display.scaleFactor;
-
     showLoading('Detecting text... 25%');
     const [ocrBlocks, axBlocks] = await Promise.all([
-      performOCR(screenshotPath),
+      performOCRSplit(screenshotPath), // split large images into quadrants for better accuracy
       getAccessibilityText(frontPid),
     ]);
     showLoading('Analyzing... 40%');
     if (isCancelled) { if (activeProgressTimer) { clearInterval(activeProgressTimer); activeProgressTimer = null; }; cleanup(screenshotPath); return; }
 
-    const textBlocks = refineWithAccessibility(ocrBlocks, axBlocks, scaleFactor);
+    const textBlocks = refineWithAccessibility(ocrBlocks, axBlocks, scaleFactor, display.bounds);
     console.log(`[detect] OCR: ${ocrBlocks.length}, AX: ${axBlocks.length}, refined: ${textBlocks.length}`);
 
     if (textBlocks.length === 0) {
@@ -214,7 +241,7 @@ async function handleTranslate() {
       const cachedBlocks = translationCache.get(hash)!.blocks;
       pendingCacheKey = hash;
       pendingCacheBlocks = cachedBlocks;
-      showOverlay({ screenshotPath, blocks: cachedBlocks });
+      showOverlay({ screenshotPath, blocks: cachedBlocks, displayBounds: display.bounds });
       sendHotkeyState('SHOWN');
       updateTrayMenu();
       return;
@@ -255,7 +282,7 @@ async function handleTranslate() {
 
     // Show — instant because window is pre-created
     // Don't cleanup screenshotPath here — renderer needs the file for background
-    showOverlay({ screenshotPath, blocks: translatedBlocks });
+    showOverlay({ screenshotPath, blocks: translatedBlocks, displayBounds: display.bounds });
     sendHotkeyState('SHOWN');
     updateTrayMenu();
   } catch (err: any) {
@@ -276,7 +303,7 @@ function filterForeignBlocks(blocks: TextBlock[], targetLang: string): TextBlock
   return blocks.filter(block => {
     const text = block.text.trim();
     if (text.length <= 1) return false;
-    if (block.confidence < 0.3) return false;
+    if (block.confidence < 0.15) return false;
 
 
     if (/^[\d\s.,:;!?@#$%^&*()\-+=<>{}[\]|/\\~`'"•●○◆★☆✓✗→←↑↓©®™℃°…]+$/.test(text)) return false;
@@ -318,7 +345,8 @@ function rectOverlapRatio(a: {x:number,y:number,width:number,height:number}, b: 
 function refineWithAccessibility(
   ocrBlocks: TextBlock[],
   axBlocks: AXTextBlock[],
-  scaleFactor: number
+  scaleFactor: number,
+  displayOffset: { x: number; y: number } = { x: 0, y: 0 }
 ): TextBlock[] {
   // Filter garbled OCR blocks (icons misread as text)
   const cleanOcr = ocrBlocks.filter(ocr => {
@@ -333,11 +361,11 @@ function refineWithAccessibility(
 
   if (axBlocks.length === 0) return cleanOcr;
 
-  // Convert AX logical coords to physical (to match OCR coordinate space)
+  // Convert AX global CSS coords → display-relative physical pixels (matching OCR space)
   const axPhysical = axBlocks.map(b => ({
     text: b.text,
-    x: b.x * scaleFactor,
-    y: b.y * scaleFactor,
+    x: (b.x - displayOffset.x) * scaleFactor,
+    y: (b.y - displayOffset.y) * scaleFactor,
     width: b.width * scaleFactor,
     height: b.height * scaleFactor,
   }));
@@ -407,6 +435,89 @@ function textSimilarity(a: string, b: string): number {
   let overlap = 0;
   for (const w of wordsA) { if (wordsB.has(w)) overlap++; }
   return overlap / Math.max(wordsA.size, wordsB.size);
+}
+
+async function handleRegionTranslate() {
+  const config = getConfig();
+  try {
+    const selection = await showSelection();
+    if (!selection) return; // user cancelled
+
+    isProcessing = true;
+    isCancelled = false;
+    showLoading('Translating... 20%');
+
+    // Crop the pre-captured frozen screenshot to the selection region
+    // (the user sees the frozen image in the selection window, so we must use the same pixels)
+    const scaleFactor = screen.getDisplayNearestPoint({ x: selection.x, y: selection.y }).scaleFactor;
+    const { nativeImage } = require('electron');
+    const fullImg = nativeImage.createFromPath(selection.screenshotPath);
+    const localX = selection.x - selection.displayBounds.x; // CSS pixels within display
+    const localY = selection.y - selection.displayBounds.y;
+    const cropped = fullImg.crop({
+      x: Math.round(localX * scaleFactor),
+      y: Math.round(localY * scaleFactor),
+      width: Math.round(selection.width * scaleFactor),
+      height: Math.round(selection.height * scaleFactor),
+    });
+    const os = require('os');
+    const screenshotPath = require('path').join(os.tmpdir(), `region-${Date.now()}.png`);
+    fs.writeFileSync(screenshotPath, cropped.toPNG());
+    cleanup(selection.screenshotPath); // discard full display screenshot
+
+    showLoading('Translating... 40%');
+    const ocrBlocks = await performOCR(screenshotPath);
+    if (ocrBlocks.length === 0) {
+      hideLoading();
+      cleanup(screenshotPath);
+      isProcessing = false;
+      return;
+    }
+
+    // OCR returns physical pixels; convert to CSS pixels relative to region
+    const cssBlocks = ocrBlocks.map(b => ({
+      ...b,
+      x: b.x / scaleFactor,
+      y: b.y / scaleFactor,
+      width: b.width / scaleFactor,
+      height: b.height / scaleFactor,
+    }));
+
+    const targetLang = config.targetLanguage || 'zh-CN';
+    const blocksToTranslate = filterForeignBlocks(cssBlocks, targetLang);
+    if (blocksToTranslate.length === 0) {
+      hideLoading();
+      cleanup(screenshotPath);
+      isProcessing = false;
+      return;
+    }
+
+    showLoading('Translating... 70%');
+    const texts = blocksToTranslate.map(b => b.text);
+    const translations = await translate(texts, targetLang, config);
+
+    const translatedBlocks = blocksToTranslate.map((block, i) => ({
+      ...block,
+      translated: translations[i] || block.text,
+    }));
+
+    hideLoading();
+    showRegionOverlay({
+      screenshotPath,
+      blocks: translatedBlocks,
+      regionX: selection.x,
+      regionY: selection.y,
+      regionWidth: selection.width,
+      regionHeight: selection.height,
+    });
+    isProcessing = false;
+  } catch (err: any) {
+    console.error('[region] Translation failed:', err);
+    const msg = err?.message || String(err);
+    showLoading(`Error: ${msg.slice(0, 80)}`);
+    setTimeout(() => hideLoading(), 3000);
+    isProcessing = false;
+  }
 }
 
 function cleanup(filepath: string) {

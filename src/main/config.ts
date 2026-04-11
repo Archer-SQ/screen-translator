@@ -12,6 +12,7 @@ export interface Config {
   hotkey: string;
   dismissKey: string;
   cacheKey: string;
+  regionKey: string;
   targetLanguage: string;
   provider: string;
   providers: Record<string, ProviderConfig>;
@@ -21,6 +22,7 @@ const DEFAULT_CONFIG: Config = {
   hotkey: 'shift+z+x',
   dismissKey: 'escape',
   cacheKey: 'shift+s',
+  regionKey: 'shift+z+c',
   targetLanguage: 'zh-CN',
   provider: 'google',
   providers: {

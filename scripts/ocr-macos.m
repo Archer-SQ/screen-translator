@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <Vision/Vision.h>
 #import <AppKit/AppKit.h>
+#import <CoreImage/CoreImage.h>
 
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
@@ -24,14 +25,28 @@ int main(int argc, const char *argv[]) {
         CGContextRef ctx = CGBitmapContextCreate(NULL, newW, newH, 8, 0, cs,
             kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 
-        CGImageRef ocrImage = cgImage;
+        CGImageRef scaledImage = cgImage;
         if (ctx) {
             CGContextSetInterpolationQuality(ctx, kCGInterpolationHigh);
             CGContextDrawImage(ctx, CGRectMake(0, 0, newW, newH), cgImage);
             CGImageRef scaled = CGBitmapContextCreateImage(ctx);
             CGContextRelease(ctx);
-            if (scaled) ocrImage = scaled; else scale = 1.0;
+            if (scaled) scaledImage = scaled; else scale = 1.0;
         } else { scale = 1.0; }
+
+        // Enhance contrast for low-contrast text (terminals, dim UIs)
+        CIImage *ciInput = [CIImage imageWithCGImage:scaledImage];
+        CIFilter *contrast = [CIFilter filterWithName:@"CIColorControls"];
+        [contrast setValue:ciInput forKey:kCIInputImageKey];
+        [contrast setValue:@(1.3) forKey:@"inputContrast"]; // 1.0 = no change
+        [contrast setValue:@(0.0) forKey:@"inputBrightness"];
+        [contrast setValue:@(0.0) forKey:@"inputSaturation"]; // grayscale helps OCR
+        CIImage *enhanced = [contrast outputImage];
+
+        CIContext *ciCtx = [CIContext contextWithOptions:nil];
+        CGImageRef ocrImage = [ciCtx createCGImage:enhanced fromRect:enhanced.extent];
+        if (!ocrImage) ocrImage = scaledImage;
+        if (scaledImage != cgImage && scaledImage != ocrImage) CGImageRelease(scaledImage);
 
         CGFloat imgW = CGImageGetWidth(ocrImage);
         CGFloat imgH = CGImageGetHeight(ocrImage);

@@ -9,6 +9,7 @@ let triggerFn: (() => void) | null = null;
 let dismissFn: (() => void) | null = null;
 let saveCacheFn: (() => void) | null = null;
 let cancelFn: (() => void) | null = null;
+let regionFn: (() => void) | null = null;
 let currentArgs: string[] = [];
 
 // Hotkey config format: "shift+z+x" or "cmd+t" etc.
@@ -51,12 +52,14 @@ export function startHotkeyMonitor(
   onDismiss: () => void,
   onSaveCache: () => void,
   onCancel: () => void,
-  hotkeys?: { trigger?: string; dismiss?: string; cache?: string }
+  onRegion: () => void,
+  hotkeys?: { trigger?: string; dismiss?: string; cache?: string; region?: string }
 ) {
   triggerFn = onTrigger;
   dismissFn = onDismiss;
   saveCacheFn = onSaveCache;
   cancelFn = onCancel;
+  regionFn = onRegion;
   shouldRestart = true;
 
   currentArgs = buildArgs(hotkeys);
@@ -69,14 +72,15 @@ function hotkeyToNativeArg(hotkey: string): string {
   return parts.join(':');
 }
 
-function buildArgs(hotkeys?: { trigger?: string; dismiss?: string; cache?: string }): string[] {
+function buildArgs(hotkeys?: { trigger?: string; dismiss?: string; cache?: string; region?: string }): string[] {
   const t = hotkeyToNativeArg(hotkeys?.trigger || 'shift+z+x');
   const d = hotkeyToNativeArg(hotkeys?.dismiss || 'escape');
   const c = hotkeyToNativeArg(hotkeys?.cache || 'shift+s');
-  return ['-t', t, '-d', d, '-c', c];
+  const r = hotkeyToNativeArg(hotkeys?.region || 'shift+z+c');
+  return ['-t', t, '-d', d, '-c', c, '-r', r];
 }
 
-export function restartWithHotkeys(hotkeys: { trigger?: string; dismiss?: string; cache?: string }) {
+export function restartWithHotkeys(hotkeys: { trigger?: string; dismiss?: string; cache?: string; region?: string }) {
   currentArgs = buildArgs(hotkeys);
   // Kill and restart
   if (hotkeyProcess) {
@@ -114,6 +118,7 @@ function launch() {
       else if (cmd === 'DISMISS' && dismissFn) dismissFn();
       else if (cmd === 'SAVE_CACHE' && saveCacheFn) saveCacheFn();
       else if (cmd === 'CANCEL' && cancelFn) cancelFn();
+      else if (cmd === 'REGION' && regionFn) regionFn();
     });
   }
 

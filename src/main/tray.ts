@@ -41,9 +41,14 @@ export function createTray() {
   ipcMain.handle('get-config', () => getConfig());
   ipcMain.handle('save-config', (_event, config) => {
     const result = saveConfig(config);
-    if (config.hotkey || config.dismissKey || config.cacheKey) {
+    if (config.hotkey || config.dismissKey || config.cacheKey || config.regionKey) {
       const { restartWithHotkeys } = require('./hotkey');
-      restartWithHotkeys({ trigger: config.hotkey, dismiss: config.dismissKey, cache: config.cacheKey });
+      restartWithHotkeys({
+        trigger: config.hotkey,
+        dismiss: config.dismissKey,
+        cache: config.cacheKey,
+        region: config.regionKey,
+      });
     }
     return result;
   });
@@ -107,7 +112,7 @@ export function openSettings() {
 
   settingsWin = new BrowserWindow({
     width: 480,
-    height: 450,
+    height: 470,
     resizable: true,
     minimizable: false,
     title: 'Screen Translator Settings',

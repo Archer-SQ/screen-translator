@@ -1,13 +1,8 @@
-const canvas = document.getElementById('result');
+const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-const MIN_FONT_RATIO = 0.6;
-const FONT_HEIGHT_RATIO = 0.75;
-const BLUR_RATIO = 0.15;
-const ERASE_PAD = 2;
-
 window.api.onShowTranslation((data) => {
-  const { screenshotPath, blocks } = data;
+  const { blocks, screenshotDataUrl, regionWidth, regionHeight } = data;
 
   const img = new Image();
   img.onload = () => {
@@ -19,9 +14,10 @@ window.api.onShowTranslation((data) => {
     clean.width = img.width;
     clean.height = img.height;
     clean.getContext('2d').drawImage(img, 0, 0);
+    const cleanCtx = clean.getContext('2d');
 
-    const scaleX = img.width / window.innerWidth;
-    const scaleY = img.height / window.innerHeight;
+    const scaleX = img.width / regionWidth;
+    const scaleY = img.height / regionHeight;
 
     blocks.forEach(block => {
       const x = Math.round(block.x * scaleX);
@@ -32,10 +28,10 @@ window.api.onShowTranslation((data) => {
       const isBold = h > 44;
       const weight = isBold ? 'bold' : 'normal';
       const fontFamily = '-apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif';
-      const originalFontSize = detectOriginalFontSize(block.text, w, h, weight, fontFamily);
 
-      const minFontSize = Math.max(10, Math.floor(originalFontSize * MIN_FONT_RATIO));
-      let fontSize = originalFontSize;
+      const heightBased = Math.round(h * 0.75);
+      let fontSize = heightBased;
+      const minFontSize = Math.max(10, Math.floor(fontSize * 0.6));
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       while (fontSize > minFontSize && ctx.measureText(block.translated).width > w) {
         fontSize--;
@@ -43,10 +39,10 @@ window.api.onShowTranslation((data) => {
       }
 
       // Erase original text with sampled background color
-      const cleanCtx = clean.getContext('2d');
       const bgColor = sampleEdgeColor(cleanCtx, x, y, w, h);
+      const pad = 2;
       ctx.fillStyle = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
-      ctx.fillRect(x - ERASE_PAD, y - ERASE_PAD, w + ERASE_PAD * 2, h + ERASE_PAD * 2);
+      ctx.fillRect(x - pad, y - pad, w + pad * 2, h + pad * 2);
 
       // Draw translated text
       const textColor = bgColor.brightness > 128
@@ -55,15 +51,33 @@ window.api.onShowTranslation((data) => {
       ctx.fillStyle = textColor;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       ctx.textBaseline = 'middle';
-
       ctx.fillText(block.translated, x, y + h / 2, w);
     });
   };
-
-  img.src = data.screenshotDataUrl || `file://${screenshotPath}`;
+  img.src = screenshotDataUrl;
 });
 
-// Edge-aware window drag + resize + double-click dismiss
+function sampleEdgeColor(cleanCtx, x, y, w, h) {
+  const m = 4;
+  const points = [
+    [x - m, y], [x - m, y + h/2], [x - m, y + h],
+    [x + w + m, y], [x + w + m, y + h/2], [x + w + m, y + h],
+    [x, y - m], [x + w/2, y - m], [x + w, y - m],
+    [x, y + h + m], [x + w/2, y + h + m], [x + w, y + h + m],
+  ];
+  let sr = 0, sg = 0, sb = 0, n = 0;
+  for (const [px, py] of points) {
+    const cx = Math.max(0, Math.min(Math.round(px), canvas.width - 1));
+    const cy = Math.max(0, Math.min(Math.round(py), canvas.height - 1));
+    const p = cleanCtx.getImageData(cx, cy, 1, 1).data;
+    sr += p[0]; sg += p[1]; sb += p[2]; n++;
+  }
+  const r = Math.round(sr / n), g = Math.round(sg / n), b = Math.round(sb / n);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return { r, g, b, brightness };
+}
+
+// Edge-aware window drag + resize
 const EDGE = 10;
 function getEdgeMode(e) {
   const w = window.innerWidth, h = window.innerHeight;
@@ -101,41 +115,17 @@ document.addEventListener('mousemove', (e) => {
   }
 });
 document.addEventListener('mouseup', () => { drag = null; });
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') window.api.close();
+});
 document.addEventListener('dblclick', () => {
-  window.api.dismiss();
+  window.api.close();
 });
 
-// Pinch-to-zoom: macOS trackpad pinch arrives as wheel event with ctrlKey
+// Pinch-to-zoom via trackpad
 document.addEventListener('wheel', (e) => {
   if (!e.ctrlKey) return;
   e.preventDefault();
   window.api.resizeBy(-e.deltaY);
 }, { passive: false });
-
-window.api.onClear(() => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
-
-function detectOriginalFontSize(originalText, boxWidth, boxHeight, weight, fontFamily) {
-  return Math.round(boxHeight * FONT_HEIGHT_RATIO);
-}
-
-function sampleEdgeColor(cleanCtx, x, y, w, h) {
-  const m = 4;
-  const points = [
-    [x - m, y], [x - m, y + h/2], [x - m, y + h],
-    [x + w + m, y], [x + w + m, y + h/2], [x + w + m, y + h],
-    [x, y - m], [x + w/2, y - m], [x + w, y - m],
-    [x, y + h + m], [x + w/2, y + h + m], [x + w, y + h + m],
-  ];
-  let sr = 0, sg = 0, sb = 0, n = 0;
-  for (const [px, py] of points) {
-    const cx = Math.max(0, Math.min(Math.round(px), canvas.width - 1));
-    const cy = Math.max(0, Math.min(Math.round(py), canvas.height - 1));
-    const p = cleanCtx.getImageData(cx, cy, 1, 1).data;
-    sr += p[0]; sg += p[1]; sb += p[2]; n++;
-  }
-  const r = Math.round(sr / n), g = Math.round(sg / n), b = Math.round(sb / n);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return { r, g, b, brightness };
-}

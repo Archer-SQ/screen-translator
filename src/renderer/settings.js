@@ -12,7 +12,8 @@ const cfgBaseUrl = document.getElementById('cfgBaseUrl');
 // --- i18n ---
 const I18N = {
   en: {
-    hotkeyTranslate: 'Translate', hotkeyDismiss: 'Dismiss', hotkeyCache: 'Save Cache',
+    hotkeyTranslate: 'Full Screen', hotkeyRegion: 'Region',
+    hotkeyDismiss: 'Dismiss', hotkeyCache: 'Cache',
     record: 'Record', stop: 'Stop',
     targetLang: 'Target Language', provider: 'Provider',
     preset: 'Preset', model: 'Model',
@@ -20,7 +21,8 @@ const I18N = {
     switchLang: '中文',
   },
   zh: {
-    hotkeyTranslate: '翻译', hotkeyDismiss: '关闭浮层', hotkeyCache: '保存缓存',
+    hotkeyTranslate: '全屏翻译', hotkeyRegion: '选区翻译',
+    hotkeyDismiss: '关闭浮层', hotkeyCache: '缓存',
     record: '录制', stop: '停止',
     targetLang: '目标语言', provider: '翻译服务',
     preset: '预设', model: '模型',
@@ -142,6 +144,7 @@ async function doSave() {
   const provider = providerSelect.value;
   const config = {
     hotkey: document.getElementById('hotkey').value || 'shift+z+x',
+    regionKey: document.getElementById('regionKey').value || 'shift+z+c',
     dismissKey: document.getElementById('dismissKey').value || 'escape',
     cacheKey: document.getElementById('cacheKey').value || 'shift+s',
     targetLanguage: document.getElementById('targetLanguage').value,
@@ -224,6 +227,7 @@ document.addEventListener('keyup', () => {
 window.api.getConfig().then(config => {
   currentConfig = config;
   document.getElementById('hotkey').value = config.hotkey || 'shift+z+x';
+  document.getElementById('regionKey').value = config.regionKey || 'shift+z+c';
   document.getElementById('dismissKey').value = config.dismissKey || 'escape';
   document.getElementById('cacheKey').value = config.cacheKey || 'shift+s';
   document.getElementById('targetLanguage').value = config.targetLanguage || 'zh-CN';

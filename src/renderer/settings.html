@@ -69,25 +69,34 @@
     <span class="lang-switch" id="langSwitch">中文</span>
   </div>
 
-  <div class="field">
-    <label data-i18n="hotkeyTranslate">Translate</label>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input id="hotkey" type="text" readonly style="flex:1;cursor:pointer;" placeholder="shift+z+x" data-hotkey="hotkey">
-      <button class="recordBtn" data-target="hotkey" data-i18n="record">Record</button>
+  <div class="row">
+    <div class="field">
+      <label data-i18n="hotkeyTranslate">Full Screen</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="hotkey" type="text" readonly style="flex:1;cursor:pointer;min-width:0;" placeholder="shift+z+x" data-hotkey="hotkey">
+        <button class="recordBtn" data-target="hotkey" data-i18n="record">Record</button>
+      </div>
+    </div>
+    <div class="field">
+      <label data-i18n="hotkeyRegion">Region</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="regionKey" type="text" readonly style="flex:1;cursor:pointer;min-width:0;" placeholder="shift+z+c" data-hotkey="regionKey">
+        <button class="recordBtn" data-target="regionKey" data-i18n="record">Record</button>
+      </div>
     </div>
   </div>
   <div class="row">
     <div class="field">
       <label data-i18n="hotkeyDismiss">Dismiss</label>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input id="dismissKey" type="text" readonly style="flex:1;cursor:pointer;" placeholder="escape" data-hotkey="dismissKey">
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="dismissKey" type="text" readonly style="flex:1;cursor:pointer;min-width:0;" placeholder="escape" data-hotkey="dismissKey">
         <button class="recordBtn" data-target="dismissKey" data-i18n="record">Record</button>
       </div>
     </div>
     <div class="field">
-      <label data-i18n="hotkeyCache">Save Cache</label>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input id="cacheKey" type="text" readonly style="flex:1;cursor:pointer;" placeholder="shift+s" data-hotkey="cacheKey">
+      <label data-i18n="hotkeyCache">Cache</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="cacheKey" type="text" readonly style="flex:1;cursor:pointer;min-width:0;" placeholder="shift+s" data-hotkey="cacheKey">
         <button class="recordBtn" data-target="cacheKey" data-i18n="record">Record</button>
       </div>
     </div>

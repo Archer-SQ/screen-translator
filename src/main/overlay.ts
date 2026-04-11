@@ -18,9 +18,53 @@ export interface OverlayBlock {
 export interface OverlayData {
   screenshotPath: string; // file path, not data URL
   blocks: OverlayBlock[];
+  displayBounds?: { x: number; y: number; width: number; height: number };
 }
 
-ipcMain.on('dismiss-overlay', () => hideOverlay());
+let dismissCallback: (() => void) | null = null;
+export function setDismissCallback(cb: () => void) { dismissCallback = cb; }
+
+ipcMain.on('dismiss-overlay', () => {
+  if (dismissCallback) dismissCallback();
+  else hideOverlay();
+});
+
+ipcMain.on('overlay-move-by', (_e, { dx, dy }: { dx: number; dy: number }) => {
+  if (overlayWin && !overlayWin.isDestroyed()) {
+    const [x, y] = overlayWin.getPosition();
+    overlayWin.setPosition(Math.round(x + dx), Math.round(y + dy));
+  }
+});
+
+ipcMain.on('overlay-resize-by', (_e, { delta }: { delta: number }) => {
+  if (overlayWin && !overlayWin.isDestroyed()) {
+    const [w, h] = overlayWin.getSize();
+    const [x, y] = overlayWin.getPosition();
+    const scale = 1 + delta * 0.02;
+    const newW = Math.max(200, Math.round(w * scale));
+    const newH = Math.max(120, Math.round(h * scale));
+    const newX = Math.round(x + (w - newW) / 2);
+    const newY = Math.round(y + (h - newH) / 2);
+    overlayWin.setBounds({ x: newX, y: newY, width: newW, height: newH });
+  }
+});
+
+ipcMain.on('overlay-resize-edge', (_e, { mode, dx, dy }: { mode: string; dx: number; dy: number }) => {
+  if (!overlayWin || overlayWin.isDestroyed()) return;
+  const [x, y] = overlayWin.getPosition();
+  const [w, h] = overlayWin.getSize();
+  let newX = x, newY = y, newW = w, newH = h;
+  if (mode.includes('e')) newW = w + dx;
+  if (mode.includes('s')) newH = h + dy;
+  if (mode.includes('w')) { newX = x + dx; newW = w - dx; }
+  if (mode.includes('n')) { newY = y + dy; newH = h - dy; }
+  if (newW < 200 || newH < 120) return;
+  overlayWin.setBounds({ x: Math.round(newX), y: Math.round(newY), width: Math.round(newW), height: Math.round(newH) });
+});
+
+function getTargetDisplay() {
+  return screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+}
 
 export function showLoading(progress?: string) {
   const text = progress || 'Translating...';
@@ -31,10 +75,11 @@ export function showLoading(progress?: string) {
     return;
   }
 
-  const { width, height } = screen.getPrimaryDisplay().size;
+  const d = getTargetDisplay();
   loadingWin = new BrowserWindow({
     width: 240, height: 56,
-    x: Math.floor(width / 2 - 120), y: Math.floor(height / 2 - 28),
+    x: d.bounds.x + Math.floor(d.bounds.width / 2 - 120),
+    y: d.bounds.y + Math.floor(d.bounds.height / 2 - 28),
     frame: false, transparent: true, alwaysOnTop: true, skipTaskbar: true,
     hasShadow: false, resizable: false, movable: false, focusable: false,
     webPreferences: { contextIsolation: true, nodeIntegration: false },
@@ -52,10 +97,11 @@ export function hideLoading() {
 
 export function showCancelled() {
   hideLoading(); hideOverlay();
-  const { width, height } = screen.getPrimaryDisplay().size;
+  const d = getTargetDisplay();
   const toast = new BrowserWindow({
     width: 200, height: 50,
-    x: Math.floor(width / 2 - 100), y: Math.floor(height / 2 - 25),
+    x: d.bounds.x + Math.floor(d.bounds.width / 2 - 100),
+    y: d.bounds.y + Math.floor(d.bounds.height / 2 - 25),
     frame: false, transparent: true, alwaysOnTop: true, skipTaskbar: true,
     hasShadow: false, focusable: false,
     webPreferences: { contextIsolation: true, nodeIntegration: false },
@@ -69,16 +115,20 @@ export function showCancelled() {
 }
 
 // Pre-create the overlay window so it's instantly ready
-export function ensureOverlayWindow(): BrowserWindow {
-  if (overlayWin && !overlayWin.isDestroyed()) return overlayWin;
+// bounds: optional display bounds to create the overlay on (defaults to primary display)
+export function ensureOverlayWindow(bounds?: { x: number; y: number; width: number; height: number }): BrowserWindow {
+  if (overlayWin && !overlayWin.isDestroyed()) {
+    if (bounds) overlayWin.setBounds(bounds);
+    return overlayWin;
+  }
 
-  const display = screen.getPrimaryDisplay();
-  const { x, y, width, height } = display.bounds;
+  const { x, y, width, height } = bounds || screen.getPrimaryDisplay().bounds;
 
   overlayWin = new BrowserWindow({
     x, y, width, height,
+    minWidth: 200, minHeight: 120,
     frame: false, transparent: true, alwaysOnTop: true, skipTaskbar: true,
-    hasShadow: false, resizable: false, movable: false, focusable: false,
+    hasShadow: false, resizable: true, movable: true, focusable: true,
     show: false, enableLargerThanScreen: true,
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload', 'overlay-preload.js'),
@@ -88,7 +138,6 @@ export function ensureOverlayWindow(): BrowserWindow {
     },
   });
 
-  overlayWin.setIgnoreMouseEvents(true);
   overlayWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlayWin.setAlwaysOnTop(true, 'screen-saver');
   overlayWin.setBounds({ x, y, width, height });
@@ -104,7 +153,7 @@ export function showOverlay(data: OverlayData) {
   }
   currentScreenshotPath = data.screenshotPath;
 
-  const win = ensureOverlayWindow();
+  const win = ensureOverlayWindow(data.displayBounds);
   console.log(`[overlay] Sending ${data.blocks.length} blocks`);
 
   // Read screenshot file and convert to data URL for reliable access from asar context

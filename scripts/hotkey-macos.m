@@ -9,8 +9,9 @@ typedef struct {
     BOOL dualKey;
 } HotkeyDef;
 
-static HotkeyDef triggerHK, dismissHK, cacheHK;
+static HotkeyDef triggerHK, dismissHK, cacheHK, regionHK;
 static BOOL tKey1Down = NO, tKey2Down = NO;
+static BOOL rKey1Down = NO, rKey2Down = NO;
 // Two states: translating (loading%) and overlay (result shown)
 static BOOL translatingMode = NO;
 static BOOL overlayMode = NO;
@@ -50,15 +51,7 @@ CGEventRef eventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef eve
 
     CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
 
-    // Mouse click → dismiss overlay (only when overlay is showing, NOT during translating)
-    if (type == kCGEventLeftMouseDown || type == kCGEventRightMouseDown) {
-        if (overlayMode) {
-            printf("DISMISS\n"); fflush(stdout);
-            overlayMode = NO; lastActionTime = now;
-            tKey1Down = NO; tKey2Down = NO;
-        }
-        return event;
-    }
+    // Mouse clicks are now handled by the overlay window itself (double-click to dismiss)
 
     if (type != kCGEventKeyDown && type != kCGEventKeyUp) return event;
 
@@ -68,9 +61,23 @@ CGEventRef eventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef eve
     if (type == kCGEventKeyDown) {
         if (keycode == triggerHK.key1) tKey1Down = YES;
         if (triggerHK.dualKey && keycode == triggerHK.key2) tKey2Down = YES;
+        if (keycode == regionHK.key1) rKey1Down = YES;
+        if (regionHK.dualKey && keycode == regionHK.key2) rKey2Down = YES;
 
         BOOL modOK = (triggerHK.modifier == 0) || ((flags & triggerHK.modifier) != 0);
         BOOL triggered = triggerHK.dualKey ? (modOK && tKey1Down && tKey2Down) : (modOK && keycode == triggerHK.key1);
+
+        BOOL regionModOK = (regionHK.modifier == 0) || ((flags & regionHK.modifier) != 0);
+        BOOL regionTriggered = regionHK.dualKey ? (regionModOK && rKey1Down && rKey2Down) : (regionModOK && keycode == regionHK.key1);
+
+        if (regionTriggered && !translatingMode && !overlayMode) {
+            rKey1Down = NO; rKey2Down = NO;
+            tKey1Down = NO; tKey2Down = NO;
+            if (now - lastActionTime < COOLDOWN) return event;
+            printf("REGION\n"); fflush(stdout);
+            lastActionTime = now;
+            return event;
+        }
 
         if (triggered) {
             tKey1Down = NO; tKey2Down = NO;
@@ -120,6 +127,8 @@ CGEventRef eventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef eve
     } else if (type == kCGEventKeyUp) {
         if (keycode == triggerHK.key1) tKey1Down = NO;
         if (triggerHK.dualKey && keycode == triggerHK.key2) tKey2Down = NO;
+        if (keycode == regionHK.key1) rKey1Down = NO;
+        if (regionHK.dualKey && keycode == regionHK.key2) rKey2Down = NO;
     }
 
     return event;
@@ -130,6 +139,7 @@ int main(int argc, const char *argv[]) {
         triggerHK = (HotkeyDef){kCGEventFlagMaskShift, 6, 7, YES};
         dismissHK = (HotkeyDef){0, 53, 0, NO};
         cacheHK   = (HotkeyDef){kCGEventFlagMaskShift, 1, 0, NO};
+        regionHK  = (HotkeyDef){kCGEventFlagMaskShift, 6, 8, YES}; // Shift+Z+C
 
         for (int i = 1; i < argc; i++) {
             NSString *arg = [NSString stringWithUTF8String:argv[i]];
@@ -139,18 +149,19 @@ int main(int argc, const char *argv[]) {
                 dismissHK = parseHotkey([NSString stringWithUTF8String:argv[++i]]);
             else if ([arg isEqualToString:@"-c"] && i + 1 < argc)
                 cacheHK = parseHotkey([NSString stringWithUTF8String:argv[++i]]);
+            else if ([arg isEqualToString:@"-r"] && i + 1 < argc)
+                regionHK = parseHotkey([NSString stringWithUTF8String:argv[++i]]);
         }
 
-        fprintf(stderr, "Hotkeys: trigger(mod=%llu k1=%d k2=%d) dismiss(k=%d) cache(mod=%llu k=%d)\n",
-                (unsigned long long)triggerHK.modifier, triggerHK.key1, triggerHK.key2,
-                dismissHK.key1, (unsigned long long)cacheHK.modifier, cacheHK.key1);
+        fprintf(stderr, "Hotkeys: trigger k1=%d k2=%d, dismiss k=%d, cache k=%d, region k1=%d k2=%d\n",
+                triggerHK.key1, triggerHK.key2, dismissHK.key1, cacheHK.key1,
+                regionHK.key1, regionHK.key2);
 
         // Also need OVERLAY_SHOWN from stdin to switch translatingMode → overlayMode
         // Use a simpler approach: main process sends "SHOWN" when overlay is displayed
         // For now, use a timeout — after TRIGGERED, switch to overlayMode after receiving no CANCEL
 
-        CGEventMask mask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp) |
-                           CGEventMaskBit(kCGEventLeftMouseDown) | CGEventMaskBit(kCGEventRightMouseDown);
+        CGEventMask mask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp);
 
         CFMachPortRef tap = CGEventTapCreate(
             kCGSessionEventTap, kCGHeadInsertEventTap, kCGEventTapOptionListenOnly,
