@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Screen Translator</title>
-  <meta name="description" content="macOS 屏幕翻译工具 — 任何应用，一键汉化">
+  <meta name="description" content="macOS 屏幕翻译工具 — 全屏翻译 · 选区翻译 · 像素级覆盖">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <style>
@@ -47,7 +47,6 @@
       transition:box-shadow .2s;position:relative;
     }
     .nav-dl:hover{box-shadow:0 0 20px var(--accent-glow);text-decoration:none!important}
-    /* Install tip dropdown */
     .dl-wrap{position:relative}
     .dl-tip{
       visibility:hidden;opacity:0;
@@ -59,10 +58,7 @@
       transition:opacity .15s,visibility .15s;
       pointer-events:none;
     }
-    /* Invisible bridge between button and panel */
-    .dl-tip::before{
-      content:'';position:absolute;top:-12px;left:0;right:0;height:12px;
-    }
+    .dl-tip::before{content:'';position:absolute;top:-12px;left:0;right:0;height:12px}
     .dl-wrap.open .dl-tip{visibility:visible;opacity:1;pointer-events:auto}
     .dl-tip strong{color:var(--fg);font-weight:500;display:block;margin-bottom:6px;font-size:13px}
     .dl-tip code{
@@ -70,8 +66,7 @@
       background:#111;border-radius:6px;
       font-family:'SF Mono',Menlo,monospace;font-size:11px;
       color:#e0e0e0;word-break:break-all;cursor:pointer;
-      border:1px solid rgba(255,255,255,0.06);
-      position:relative;
+      border:1px solid rgba(255,255,255,0.06);position:relative;
     }
     .dl-tip code:hover{border-color:var(--accent)}
     .dl-tip code .copy-label{
@@ -91,26 +86,40 @@
     /* Hero */
     .hero{
       max-width:1100px;margin:0 auto;
-      padding:72px 24px 24px;text-align:center;
+      padding:72px 24px 16px;text-align:center;
     }
     .hero h1{
-      font-size:40px;font-weight:700;
+      font-size:42px;font-weight:700;
       letter-spacing:-1.5px;line-height:1.15;
-      margin-bottom:20px;
-      color:var(--fg);
+      margin-bottom:14px;
     }
     .hero .sub{
-      font-size:15px;color:var(--fg-2);line-height:1.8;
-      max-width:480px;margin:0 auto 32px;
+      font-size:15px;color:var(--fg-2);line-height:1.7;
+      max-width:520px;margin:0 auto 20px;
     }
-    @media(max-width:600px){
-      .hero{padding:56px 20px 20px}
-      .hero h1{font-size:28px;letter-spacing:-1px}
+    .hero .modes{
+      display:inline-flex;gap:8px;padding:4px;
+      background:var(--glass);border:1px solid var(--border);
+      border-radius:10px;font-size:12px;color:var(--fg-2);
     }
+    .hero .modes span{padding:4px 12px;border-radius:7px}
+    .hero .modes .active{background:var(--accent);color:#fff}
 
     /* Demo */
-    .demo-sec{max-width:1100px;margin:0 auto 48px;padding:0 16px}
+    .demo-sec{max-width:1100px;margin:0 auto 60px;padding:32px 16px 0}
+    .demo-label{
+      text-align:center;margin-bottom:14px;
+      font-size:12px;color:var(--fg-3);letter-spacing:1px;text-transform:uppercase;
+      transition:color .3s;
+    }
+    .demo-label .kbd{
+      display:inline-block;padding:2px 7px;margin:0 4px;
+      border-radius:4px;background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.1);
+      font-family:inherit;font-size:11px;font-weight:600;color:var(--fg-2);
+    }
     .demo-outer{
+      position:relative;
       border-radius:14px;overflow:hidden;
       border:1px solid rgba(255,255,255,0.06);
       background:linear-gradient(180deg,rgba(255,255,255,0.03) 0%,transparent 100%);
@@ -135,18 +144,18 @@
 
     .demo-sidebar{
       padding:12px 0;background:#252526;border-right:1px solid #333;
-      display:flex;flex-direction:column;gap:0;
+      display:flex;flex-direction:column;
     }
-    .demo-sb-item{padding:7px 16px;font-size:13px;position:relative;overflow:hidden}
+    .demo-sb-item{padding:7px 16px;font-size:13px;position:relative;overflow:hidden;line-height:1.6}
     .ds-active{background:#37373d}
     .demo-sb-item .d-orig,.demo-sb-item .d-trans{display:block}
     .demo-sb-item .d-trans{position:absolute;left:16px;top:7px;opacity:0;transition:opacity .35s}
     .demo-sb-item .d-orig{transition:opacity .35s}
 
-    .demo-content{padding:20px 24px;display:flex;flex-direction:column;gap:10px}
-    .dc-title{font-size:16px;font-weight:600;color:#e0e0e0;margin-bottom:4px;position:relative;overflow:hidden;line-height:1.6}
-    .demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative}
-    .demo-row .d-label{position:relative;line-height:1.6;min-width:80px}
+    .demo-content{padding:20px 24px;display:flex;flex-direction:column;gap:10px;position:relative}
+    .dc-title{font-size:16px;font-weight:600;color:#e0e0e0;margin-bottom:4px;position:relative;line-height:1.6}
+    .demo-row{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;min-height:24px}
+    .demo-row .d-label{position:relative;line-height:1.6;min-width:90px}
     .demo-row .d-orig,.demo-row .d-trans{display:block}
     .demo-row .d-trans{position:absolute;left:0;top:0;opacity:0;transition:opacity .35s}
     .demo-row .d-orig{transition:opacity .35s}
@@ -157,19 +166,14 @@
       padding:4px 10px;border-radius:4px;background:#3c3c3c;border:1px solid #555;
       font-size:12px;color:#ccc;white-space:nowrap;flex-shrink:0;
     }
-    .demo-toggle{
-      width:32px;height:18px;border-radius:9px;position:relative;flex-shrink:0;
-    }
+    .demo-toggle{width:32px;height:18px;border-radius:9px;position:relative;flex-shrink:0}
     .demo-toggle.on{background:#0072f5}
-    .demo-toggle.off{background:#555}
     .demo-toggle::after{
-      content:'';position:absolute;top:2px;
+      content:'';position:absolute;top:2px;left:16px;
       width:14px;height:14px;border-radius:50%;background:#fff;
     }
-    .demo-toggle.on::after{left:16px}
-    .demo-toggle.off::after{left:2px}
 
-    /* Demo toast */
+    /* Loading toast */
     .demo-toast{
       position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.95);
       background:rgba(0,0,0,0.88);color:#fff;
@@ -179,65 +183,51 @@
       pointer-events:none;z-index:5;
       box-shadow:0 4px 24px rgba(0,0,0,0.5);
     }
-    .demo-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    .demo-window.phase-toast .demo-toast{opacity:1;transform:translate(-50%,-50%) scale(1)}
 
-    /* Demo trigger button */
-    .demo-trigger{
-      display:flex;align-items:center;justify-content:center;gap:12px;
-      margin-top:16px;
+    /* Region selection overlay */
+    .region-box{
+      position:absolute;pointer-events:none;z-index:4;
+      border:2px solid var(--accent);
+      background:rgba(59,130,246,0.08);
+      box-shadow:0 0 0 9999px rgba(0,0,0,0.4);
+      opacity:0;transition:opacity .2s;
     }
-    .demo-btn{
-      background:transparent;color:var(--fg-2);
-      border:1px solid rgba(255,255,255,0.1);
-      padding:8px 20px;border-radius:8px;
-      font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;
-      display:flex;align-items:center;gap:8px;
-      transition:all .2s;
-    }
-    .demo-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 20px var(--accent-glow)}
-    .demo-btn.active{border-color:var(--accent);color:var(--accent);pointer-events:none}
-    .demo-btn .keys{display:flex;gap:3px}
-    .demo-btn kbd{
-      padding:2px 6px;border-radius:3px;
-      background:rgba(255,255,255,0.06);
-      font-family:inherit;font-size:11px;font-weight:600;
-    }
+    .demo-window.phase-region .region-box{opacity:1}
+    .demo-window.phase-region-done .region-box{opacity:0}
 
-    @media(max-width:500px){
-      .demo-window{grid-template-columns:1fr}
-      .demo-sidebar{display:none}
-    }
+    /* Translated state (full screen) */
+    .demo-window.phase-done .d-orig,
+    .demo-window.phase-region-done .region-target .d-orig{opacity:0}
+    .demo-window.phase-done .d-trans,
+    .demo-window.phase-region-done .region-target .d-trans{opacity:1}
 
-    /* Translated state */
-    .demo-window.translated .d-orig{opacity:0}
-    .demo-window.translated .d-trans{opacity:1}
-    .demo-window.translated .demo-sb-item:nth-child(1) .d-trans,.demo-window.translated .demo-sb-item:nth-child(1) .d-orig{transition-delay:0s}
-    .demo-window.translated .demo-sb-item:nth-child(2) .d-trans,.demo-window.translated .demo-sb-item:nth-child(2) .d-orig{transition-delay:.04s}
-    .demo-window.translated .demo-sb-item:nth-child(3) .d-trans,.demo-window.translated .demo-sb-item:nth-child(3) .d-orig{transition-delay:.08s}
-    .demo-window.translated .demo-sb-item:nth-child(4) .d-trans,.demo-window.translated .demo-sb-item:nth-child(4) .d-orig{transition-delay:.12s}
-    .demo-window.translated .demo-sb-item:nth-child(5) .d-trans,.demo-window.translated .demo-sb-item:nth-child(5) .d-orig{transition-delay:.16s}
-    .demo-window.translated .dc-title .d-trans,.demo-window.translated .dc-title .d-orig{transition-delay:0s}
-    .demo-window.translated .demo-row:nth-child(2) .d-trans,.demo-window.translated .demo-row:nth-child(2) .d-orig{transition-delay:.05s}
-    .demo-window.translated .demo-row:nth-child(3) .d-trans,.demo-window.translated .demo-row:nth-child(3) .d-orig{transition-delay:.1s}
-    .demo-window.translated .demo-row:nth-child(4) .d-trans,.demo-window.translated .demo-row:nth-child(4) .d-orig{transition-delay:.15s}
-    .demo-window.translated .demo-row:nth-child(5) .d-trans,.demo-window.translated .demo-row:nth-child(5) .d-orig{transition-delay:.2s}
-    .demo-window.translated .demo-row:nth-child(6) .d-trans,.demo-window.translated .demo-row:nth-child(6) .d-orig{transition-delay:.25s}
-    .demo-window.translated .demo-row:nth-child(7) .d-trans,.demo-window.translated .demo-row:nth-child(7) .d-orig{transition-delay:.3s}
-    .demo-window.translated .demo-row:nth-child(8) .d-trans,.demo-window.translated .demo-row:nth-child(8) .d-orig{transition-delay:.35s}
+    .demo-window.phase-done .demo-sb-item:nth-child(1) .d-trans,.demo-window.phase-done .demo-sb-item:nth-child(1) .d-orig{transition-delay:0s}
+    .demo-window.phase-done .demo-sb-item:nth-child(2) .d-trans,.demo-window.phase-done .demo-sb-item:nth-child(2) .d-orig{transition-delay:.04s}
+    .demo-window.phase-done .demo-sb-item:nth-child(3) .d-trans,.demo-window.phase-done .demo-sb-item:nth-child(3) .d-orig{transition-delay:.08s}
+    .demo-window.phase-done .demo-sb-item:nth-child(4) .d-trans,.demo-window.phase-done .demo-sb-item:nth-child(4) .d-orig{transition-delay:.12s}
+    .demo-window.phase-done .demo-sb-item:nth-child(5) .d-trans,.demo-window.phase-done .demo-sb-item:nth-child(5) .d-orig{transition-delay:.16s}
+    .demo-window.phase-done .dc-title .d-trans,.demo-window.phase-done .dc-title .d-orig{transition-delay:0s}
+    .demo-window.phase-done .demo-row:nth-child(2) .d-trans,.demo-window.phase-done .demo-row:nth-child(2) .d-orig{transition-delay:.05s}
+    .demo-window.phase-done .demo-row:nth-child(3) .d-trans,.demo-window.phase-done .demo-row:nth-child(3) .d-orig{transition-delay:.1s}
+    .demo-window.phase-done .demo-row:nth-child(4) .d-trans,.demo-window.phase-done .demo-row:nth-child(4) .d-orig{transition-delay:.15s}
+    .demo-window.phase-done .demo-row:nth-child(5) .d-trans,.demo-window.phase-done .demo-row:nth-child(5) .d-orig{transition-delay:.2s}
+    .demo-window.phase-done .demo-row:nth-child(6) .d-trans,.demo-window.phase-done .demo-row:nth-child(6) .d-orig{transition-delay:.25s}
+    .demo-window.phase-done .demo-row:nth-child(7) .d-trans,.demo-window.phase-done .demo-row:nth-child(7) .d-orig{transition-delay:.3s}
+    .demo-window.phase-done .demo-row:nth-child(8) .d-trans,.demo-window.phase-done .demo-row:nth-child(8) .d-orig{transition-delay:.35s}
 
     /* Pipeline */
     .pipeline{
-      max-width:700px;margin:0 auto 32px;
+      max-width:700px;margin:0 auto 48px;
       display:flex;align-items:center;justify-content:center;
       gap:0;padding:0 24px;
     }
     .pipe-step{text-align:center;padding:8px 12px}
-    .pipe-step strong{display:block;font-size:12px;font-weight:600;letter-spacing:-0.2px;color:var(--fg)}
+    .pipe-step strong{display:block;font-size:12px;font-weight:600;color:var(--fg)}
     .pipe-step span{font-size:10px;color:var(--fg-3)}
     .pipe-arr{color:var(--fg-3);font-size:12px;margin-bottom:12px;opacity:0.4}
     @media(max-width:600px){.pipe-arr{display:none}.pipeline{flex-wrap:wrap;gap:2px}}
 
-    /* Divider */
     .divider{border:none;border-top:1px solid var(--border);max-width:1100px;margin:0 auto}
 
     /* Section */
@@ -246,15 +236,13 @@
     .sec-head h2{font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:6px}
     .sec-head p{font-size:14px;color:var(--fg-2)}
 
-    /* Features */
     .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden}
     .feat{padding:28px;background:var(--bg)}
     .feat:hover{background:var(--glass)}
-    .feat h3{font-size:14px;font-weight:600;letter-spacing:-0.2px;margin-bottom:6px}
+    .feat h3{font-size:14px;font-weight:600;margin-bottom:6px}
     .feat p{font-size:13px;color:var(--fg-2);line-height:1.65}
     @media(max-width:700px){.feat-grid{grid-template-columns:1fr}}
 
-    /* Providers */
     .prov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden}
     .prov{padding:24px 12px;background:var(--bg);text-align:center;transition:background .2s}
     .prov:hover{background:var(--glass)}
@@ -268,8 +256,7 @@
     .tag-k{background:#1a1a1a;color:#888}
     @media(max-width:600px){.prov-grid{grid-template-columns:repeat(2,1fr)}}
 
-    /* Shortcuts */
-    .sc-list{max-width:400px;margin:0 auto;display:flex;flex-direction:column;gap:1px;background:var(--border);border-radius:10px;overflow:hidden}
+    .sc-list{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:1px;background:var(--border);border-radius:10px;overflow:hidden}
     .sc-row{
       display:flex;align-items:center;justify-content:space-between;
       padding:12px 20px;background:var(--bg);font-size:14px;
@@ -281,11 +268,9 @@
       font-family:inherit;font-size:11px;font-weight:600;
     }
 
-    /* Install */
     .inst{
       max-width:520px;margin:0 auto;
-      border:1px solid var(--border);border-radius:12px;
-      overflow:hidden;
+      border:1px solid var(--border);border-radius:12px;overflow:hidden;
     }
     .inst-head{padding:20px 24px 0;font-size:14px;font-weight:600}
     .code{
@@ -296,11 +281,10 @@
     }
     .code .c{color:#444}
 
-    /* Footer */
     .footer{
-      max-width:1100px;margin:0 auto;
+      max-width:1100px;margin:40px auto 0;
       padding:32px 24px;text-align:center;
-      border-top:1px solid var(--border);margin-top:40px;
+      border-top:1px solid var(--border);
     }
     .footer p{font-size:12px;color:var(--fg-3)}
   </style>
@@ -315,7 +299,7 @@
     <a href="#install" data-i18n="n.inst">安装</a>
     <a href="https://github.com/Archer-SQ/screen-translator">GitHub</a>
     <div class="dl-wrap">
-      <a class="nav-dl" href="https://github.com/Archer-SQ/screen-translator/releases/download/v1.1.1/Screen.Translator-1.1.1-arm64.dmg" data-i18n="h.dl">下载</a>
+      <a class="nav-dl" href="https://github.com/Archer-SQ/screen-translator/releases/download/v1.2.0/Screen.Translator-1.2.0-arm64.dmg" data-i18n="h.dl">下载</a>
       <div class="dl-tip">
         <strong data-i18n="tip.t">安装提示</strong>
         <p class="steps" data-i18n-html="tip.s"><span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：</p>
@@ -329,24 +313,16 @@
 
 <section class="hero">
   <h1 data-i18n="h.t">屏幕上的文字，一键翻译</h1>
-  <p class="sub" data-i18n="h.sub">截屏、识别、翻译、原位覆盖，一步到位。</p>
+  <p class="sub" data-i18n="h.sub">全屏翻译 · 选区翻译 · 像素级原位覆盖 · 可拖拽缩放</p>
+  <div class="modes">
+    <span id="modeFull" class="active" data-i18n="m.full">全屏翻译</span>
+    <span id="modeRegion" data-i18n="m.region">选区翻译</span>
+  </div>
 </section>
 
-<!-- Pipeline moved above demo -->
-<div class="pipeline">
-  <div class="pipe-step"><strong data-i18n="p.1">快捷键</strong><span>Shift+Z+X</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.2">截屏</strong><span>screencapture</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.3">识别</strong><span>Vision + AX</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.4">翻译</strong><span>Google / API</span></div>
-  <span class="pipe-arr">&rarr;</span>
-  <div class="pipe-step"><strong data-i18n="p.5">覆盖</strong><span data-i18n="p.6">像素级还原</span></div>
-</div>
-
-<!-- Interactive Demo -->
+<!-- Demo -->
 <section class="demo-sec">
+  <div class="demo-label" id="demoLabel"><span data-i18n="demo.press">按</span> <span class="kbd">Shift</span><span class="kbd">Z</span><span class="kbd">X</span> <span data-i18n="demo.fsHint">翻译整个屏幕</span></div>
   <div class="demo-outer">
     <div class="demo-window" id="demoWin">
       <div class="demo-titlebar">
@@ -362,24 +338,29 @@
       </div>
       <div class="demo-content">
         <div class="dc-title"><span class="d-orig">Appearance</span><span class="d-trans">外观</span></div>
-        <div class="demo-row"><div class="d-label"><span class="d-orig">Color Theme</span><span class="d-trans">颜色主题</span></div><div class="demo-select">Dark Modern</div></div>
-        <div class="demo-row"><div class="d-label"><span class="d-orig">Font Family</span><span class="d-trans">字体</span></div><div class="demo-select">Menlo, Monaco</div></div>
-        <div class="demo-row"><div class="d-label"><span class="d-orig">Font Size</span><span class="d-trans">字号</span></div><div class="demo-select">14</div></div>
-        <div class="demo-row"><div class="d-label"><span class="d-orig">Tab Size</span><span class="d-trans">缩进大小</span></div><div class="demo-select">2</div></div>
-        <div class="demo-row"><div class="d-label"><span class="d-orig">Word Wrap</span><span class="d-trans">自动换行</span></div><div class="demo-select">Off</div></div>
-        <div class="demo-row"><div class="d-label"><span class="d-orig">Minimap</span><span class="d-trans">小地图</span></div><div class="demo-toggle on"></div></div>
-        <div class="demo-row"><div class="d-label"><span class="d-orig">Breadcrumbs</span><span class="d-trans">面包屑导航</span></div><div class="demo-toggle on"></div></div>
+        <div class="demo-row region-target" id="rtColor"><div class="d-label"><span class="d-orig">Color Theme</span><span class="d-trans">颜色主题</span></div><div class="demo-select">Dark Modern</div></div>
+        <div class="demo-row region-target"><div class="d-label"><span class="d-orig">Font Family</span><span class="d-trans">字体</span></div><div class="demo-select">Menlo, Monaco</div></div>
+        <div class="demo-row region-target"><div class="d-label"><span class="d-orig">Font Size</span><span class="d-trans">字号</span></div><div class="demo-select">14</div></div>
+        <div class="demo-row region-target"><div class="d-label"><span class="d-orig">Tab Size</span><span class="d-trans">缩进大小</span></div><div class="demo-select">2</div></div>
+        <div class="demo-row region-target"><div class="d-label"><span class="d-orig">Word Wrap</span><span class="d-trans">自动换行</span></div><div class="demo-select">Off</div></div>
+        <div class="demo-row region-target"><div class="d-label"><span class="d-orig">Minimap</span><span class="d-trans">小地图</span></div><div class="demo-toggle on"></div></div>
+        <div class="demo-row region-target"><div class="d-label"><span class="d-orig">Breadcrumbs</span><span class="d-trans">面包屑导航</span></div><div class="demo-toggle on"></div></div>
       </div>
+      <div class="region-box" id="regionBox"></div>
       <div class="demo-toast" id="demoToast">Translating... <span id="demoPercent">0</span>%</div>
     </div>
   </div>
-  <div class="demo-trigger">
-    <button class="demo-btn" id="demoBtn" onclick="triggerDemo()">
-      <span id="demoBtnText" data-i18n="demo.try">点击体验翻译效果</span>
-      <span class="keys" id="demoBtnKeys"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></span>
-    </button>
-  </div>
 </section>
+
+<div class="pipeline">
+  <div class="pipe-step"><strong data-i18n="p.1">截屏</strong><span>screencapture</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.2">识别</strong><span>Vision + AX</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.3">翻译</strong><span>Google / API</span></div>
+  <span class="pipe-arr">&rarr;</span>
+  <div class="pipe-step"><strong data-i18n="p.4">覆盖</strong><span data-i18n="p.5">像素级还原</span></div>
+</div>
 
 <hr class="divider">
 
@@ -389,12 +370,12 @@
     <p data-i18n="f.s">专为浏览器翻译不了的场景而生</p>
   </div>
   <div class="feat-grid">
-    <div class="feat"><h3 data-i18n="f1.t">任何应用都能翻译</h3><p data-i18n="f1.d">不限于浏览器 — 开发工具、设计软件、游戏界面，只要屏幕上有文字就能翻译。</p></div>
-    <div class="feat"><h3 data-i18n="f2.t">像素级原位覆盖</h3><p data-i18n="f2.d">译文直接覆盖原文位置，自动匹配字号和背景色，看起来像原生汉化。</p></div>
-    <div class="feat"><h3 data-i18n="f3.t">隐私优先</h3><p data-i18n="f3.d">截图在本地处理，不上传任何服务器。API 密钥仅存储在你的电脑上。</p></div>
-    <div class="feat"><h3 data-i18n="f4.t">OCR + 无障碍双引擎</h3><p data-i18n="f4.d">macOS Vision OCR 识别文字，Accessibility API 精确定位，两者结合精度更高。</p></div>
-    <div class="feat"><h3 data-i18n="f5.t">一键缓存</h3><p data-i18n="f5.d">常用界面按 Shift+S 缓存，下次秒显，不用重新等待翻译。</p></div>
-    <div class="feat"><h3 data-i18n="f6.t">免费开箱即用</h3><p data-i18n="f6.d">内置 Google 免费翻译，也支持 OpenAI、Claude、DeepL、Ollama 等付费/本地方案。</p></div>
+    <div class="feat"><h3 data-i18n="f1.t">全屏一键翻译</h3><p data-i18n="f1.d">按 Shift+Z+X，整屏的 UI、菜单、内容一键翻译，译文直接覆盖原文位置。</p></div>
+    <div class="feat"><h3 data-i18n="f2.t">选区翻译</h3><p data-i18n="f2.d">按 Shift+Z+C 框选任意区域，只翻译你关心的部分。结果浮层可自由拖拽缩放。</p></div>
+    <div class="feat"><h3 data-i18n="f3.t">冻结截图</h3><p data-i18n="f3.d">按下快捷键瞬间画面冻结，动态视频、游戏、动画也能精确框选，所见即所得。</p></div>
+    <div class="feat"><h3 data-i18n="f4.t">像素级覆盖</h3><p data-i18n="f4.d">Canvas 直接绘制，自动匹配字号和背景色，看起来像原生汉化。</p></div>
+    <div class="feat"><h3 data-i18n="f5.t">多屏支持</h3><p data-i18n="f5.d">自动检测光标所在的屏幕，把鼠标放到哪个屏幕就翻译哪个屏幕。</p></div>
+    <div class="feat"><h3 data-i18n="f6.t">浮层随心</h3><p data-i18n="f6.d">任意位置可拖拽移动，8 方向边缘缩放，触控板双指捏合，双击关闭。</p></div>
   </div>
 </section>
 
@@ -422,9 +403,10 @@
     <p data-i18n="sc.s">所有快捷键均可自定义</p>
   </div>
   <div class="sc-list">
-    <div class="sc-row"><span data-i18n="s1">翻译屏幕</span><div class="keys-show"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div></div>
-    <div class="sc-row"><span data-i18n="s2">关闭浮层</span><div class="keys-show"><kbd>ESC</kbd></div></div>
-    <div class="sc-row"><span data-i18n="s3">缓存翻译</span><div class="keys-show"><kbd>Shift</kbd><kbd>S</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s1">全屏翻译</span><div class="keys-show"><kbd>Shift</kbd><kbd>Z</kbd><kbd>X</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s2">选区翻译</span><div class="keys-show"><kbd>Shift</kbd><kbd>Z</kbd><kbd>C</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s3">关闭浮层</span><div class="keys-show"><kbd>ESC</kbd></div></div>
+    <div class="sc-row"><span data-i18n="s4">缓存翻译</span><div class="keys-show"><kbd>Shift</kbd><kbd>S</kbd></div></div>
   </div>
 </section>
 
@@ -457,42 +439,48 @@ const T={
 zh:{
 'n.feat':'特性','n.prov':'服务','n.inst':'安装','h.dl':'下载',
 'h.t':'屏幕上的文字，一键翻译',
-'h.sub':'截屏、识别、翻译、原位覆盖，一步到位。',
-'demo.try':'点击体验翻译效果','demo.restore':'还原',
-'p.1':'快捷键','p.2':'截屏','p.3':'识别','p.4':'翻译','p.5':'覆盖','p.6':'像素级还原',
+'h.sub':'全屏翻译 · 选区翻译 · 像素级原位覆盖 · 可拖拽缩放',
+'m.full':'全屏翻译','m.region':'选区翻译',
+'demo.press':'按','demo.fsHint':'翻译整个屏幕','demo.regionHint':'框选任意区域翻译',
+'p.1':'截屏','p.2':'识别','p.3':'翻译','p.4':'覆盖','p.5':'像素级还原',
 'f.t':'为什么选择 Screen Translator','f.s':'专为浏览器翻译不了的场景而生',
-'f1.t':'任何应用都能翻译','f1.d':'不限于浏览器 — 开发工具、设计软件、游戏界面，只要屏幕上有文字就能翻译。',
-'f2.t':'像素级原位覆盖','f2.d':'译文直接覆盖原文位置，自动匹配字号和背景色，看起来像原生汉化。',
-'f3.t':'隐私优先','f3.d':'截图在本地处理，不上传任何服务器。API 密钥仅存储在你的电脑上。',
-'f4.t':'OCR + 无障碍双引擎','f4.d':'macOS Vision OCR 识别文字，Accessibility API 精确定位，两者结合精度更高。',
-'f5.t':'一键缓存','f5.d':'常用界面按 Shift+S 缓存，下次秒显，不用重新等待翻译。',
-'f6.t':'免费开箱即用','f6.d':'内置 Google 免费翻译，也支持 OpenAI、Claude、DeepL、Ollama 等付费/本地方案。',
+'f1.t':'全屏一键翻译','f1.d':'按 Shift+Z+X，整屏的 UI、菜单、内容一键翻译，译文直接覆盖原文位置。',
+'f2.t':'选区翻译','f2.d':'按 Shift+Z+C 框选任意区域，只翻译你关心的部分。结果浮层可自由拖拽缩放。',
+'f3.t':'冻结截图','f3.d':'按下快捷键瞬间画面冻结，动态视频、游戏、动画也能精确框选，所见即所得。',
+'f4.t':'像素级覆盖','f4.d':'Canvas 直接绘制，自动匹配字号和背景色，看起来像原生汉化。',
+'f5.t':'多屏支持','f5.d':'自动检测光标所在的屏幕，把鼠标放到哪个屏幕就翻译哪个屏幕。',
+'f6.t':'浮层随心','f6.d':'任意位置可拖拽移动，8 方向边缘缩放，触控板双指捏合，双击关闭。',
 'pv.t':'翻译引擎','pv.s':'从免费到专业，从云端到本地',
 'g.d':'内置免费','o.d':'GPT-4o','a.d':'Claude 等','d.d':'专业质量','l.d':'完全离线','t.f':'免费',
 'sc.t':'快捷键','sc.s':'所有快捷键均可自定义',
-'copy.label':'点击复制','tip.t':'安装提示','tip.s':'<span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：','tip.e':'然后重新打开即可（未签名应用需此步骤）',
-'s1':'翻译屏幕','s2':'关闭浮层','s3':'缓存翻译',
+'s1':'全屏翻译','s2':'选区翻译','s3':'关闭浮层','s4':'缓存翻译',
 'i.t':'快速开始','i.b':'从源码构建',
+'copy.label':'点击复制','tip.t':'安装提示',
+'tip.s':'<span>1.</span> 下载 DMG → 拖入 Applications<br><span>2.</span> 首次打开如提示「已损坏」，打开终端粘贴：',
+'tip.e':'然后重新打开即可（未签名应用需此步骤）',
 },
 en:{
 'n.feat':'Features','n.prov':'Providers','n.inst':'Install','h.dl':'Download',
 'h.t':'Translate anything on your screen',
-'h.sub':'Capture, detect, translate, and overlay — in one step.',
-'demo.try':'Click to see it in action','demo.restore':'Restore',
-'p.1':'Hotkey','p.2':'Capture','p.3':'Detect','p.4':'Translate','p.5':'Overlay','p.6':'Pixel-perfect',
+'h.sub':'Full screen · Region select · Pixel-perfect overlay · Drag & resize',
+'m.full':'Full Screen','m.region':'Region',
+'demo.press':'Press','demo.fsHint':'to translate the whole screen','demo.regionHint':'to draw and translate a region',
+'p.1':'Capture','p.2':'Detect','p.3':'Translate','p.4':'Overlay','p.5':'Pixel-perfect',
 'f.t':'Why Screen Translator','f.s':'Built for what browser translation can\'t reach',
-'f1.t':'Translate any application','f1.d':'Not just browsers — dev tools, design apps, game UIs. If there\'s text on screen, it can be translated.',
-'f2.t':'Pixel-perfect overlay','f2.d':'Translations cover the original text in place, matching font size and background. Looks like native localization.',
-'f3.t':'Privacy first','f3.d':'Screenshots are processed locally, never uploaded. API keys stored only on your machine.',
-'f4.t':'OCR + Accessibility','f4.d':'macOS Vision for text recognition, Accessibility API for precise positioning. Dual-engine accuracy.',
-'f5.t':'One-click cache','f5.d':'Press Shift+S to cache frequent screens. Instant display next time, no re-translation needed.',
-'f6.t':'Free out of the box','f6.d':'Built-in Google Translate (free). Also supports OpenAI, Claude, DeepL, and Ollama for premium/local options.',
+'f1.t':'Full-screen translate','f1.d':'Press Shift+Z+X — every UI element, menu, and content on screen gets translated in place.',
+'f2.t':'Region select','f2.d':'Press Shift+Z+C to draw a box and translate just that area. Result overlay is draggable and resizable.',
+'f3.t':'Freeze frame','f3.d':'The screen freezes the moment you press the hotkey. Works on videos, games, and animations.',
+'f4.t':'Pixel-perfect overlay','f4.d':'Canvas rendering matches original font size and background color. Looks like native localization.',
+'f5.t':'Multi-display','f5.d':'Automatically detects which display your cursor is on and translates that screen.',
+'f6.t':'Flexible overlay','f6.d':'Drag from anywhere, 8-direction edge resize, trackpad pinch-to-zoom, double-click to close.',
 'pv.t':'Translation Engines','pv.s':'From free to premium, cloud to local',
 'g.d':'Built-in free','o.d':'GPT-4o','a.d':'Claude, etc.','d.d':'Premium quality','l.d':'Fully offline','t.f':'Free',
 'sc.t':'Shortcuts','sc.s':'All customizable',
-'copy.label':'Click to copy','tip.t':'Install Guide','tip.s':'<span>1.</span> Download DMG → drag to Applications<br><span>2.</span> If "damaged" warning appears, open Terminal and paste:','tip.e':'Then reopen the app (required for unsigned apps)',
-'s1':'Translate Screen','s2':'Dismiss Overlay','s3':'Cache Translation',
+'s1':'Full Screen Translate','s2':'Region Translate','s3':'Dismiss Overlay','s4':'Cache Translation',
 'i.t':'Get Started','i.b':'Build from source',
+'copy.label':'Click to copy','tip.t':'Install Guide',
+'tip.s':'<span>1.</span> Download DMG → drag to Applications<br><span>2.</span> If "damaged" warning appears, open Terminal and paste:',
+'tip.e':'Then reopen the app (required for unsigned apps)',
 }};
 let L=localStorage.getItem('st-l')||'zh';
 apply(L);
@@ -508,19 +496,20 @@ function apply(l){
     const k=e.getAttribute('data-i18n-html');
     if(T[l][k]) e.innerHTML=T[l][k];
   });
+  // re-apply demo label if available
+  updateDemoLabel();
 }
 
-// Copy xattr command
 function copyCmd(){
   navigator.clipboard.writeText('xattr -cr /Applications/Screen\\ Translator.app').then(()=>{
     const c=document.getElementById('xattrCmd');
     const lb=document.getElementById('copyLabel');
     c.style.borderColor='var(--accent)';
-    lb.textContent='✓ 已复制';
+    lb.textContent='✓ '+(L==='zh'?'已复制':'Copied');
     lb.classList.add('copied');
   });
 }
-// Tooltip hover with delay (like mature component libraries)
+
 const dlWrap=document.querySelector('.dl-wrap');
 let tipTimer=null;
 function showTip(){clearTimeout(tipTimer);dlWrap.classList.add('open');
@@ -535,46 +524,95 @@ dlWrap.addEventListener('mouseleave',hideTip);
 document.querySelector('.dl-tip').addEventListener('mouseenter',showTip);
 document.querySelector('.dl-tip').addEventListener('mouseleave',hideTip);
 
-// Interactive demo
+// ===== Auto-looping demo showing both full-screen and region translation =====
 const dw=document.getElementById('demoWin');
 const toast=document.getElementById('demoToast');
 const pct=document.getElementById('demoPercent');
-const btn=document.getElementById('demoBtn');
-let demoRunning=false;
-let isTranslated=false;
+const modeFull=document.getElementById('modeFull');
+const modeRegion=document.getElementById('modeRegion');
+const regionBox=document.getElementById('regionBox');
+const demoLabel=document.getElementById('demoLabel');
 
-const btnText=document.getElementById('demoBtnText');
-const btnKeys=document.getElementById('demoBtnKeys');
-
-function triggerDemo(){
-  if(demoRunning) return;
-  if(isTranslated){
-    dw.classList.remove('translated');
-    isTranslated=false;
-    btnText.textContent=T[L]['demo.try'];
-    btnKeys.style.display='';
-    return;
+let currentMode='full';
+function updateDemoLabel(){
+  if(!demoLabel) return;
+  const press=T[L]['demo.press'];
+  if(currentMode==='full'){
+    demoLabel.innerHTML=`${press} <span class="kbd">Shift</span><span class="kbd">Z</span><span class="kbd">X</span> ${T[L]['demo.fsHint']}`;
+  } else {
+    demoLabel.innerHTML=`${press} <span class="kbd">Shift</span><span class="kbd">Z</span><span class="kbd">C</span> ${T[L]['demo.regionHint']}`;
   }
-  demoRunning=true;
-  btn.classList.add('active');
-  let p=0;
-  toast.classList.add('show');
-  const iv=setInterval(()=>{
-    p+=Math.random()*18+5;
-    if(p>=100){p=100;clearInterval(iv);
-      setTimeout(()=>{
-        toast.classList.remove('show');
-        dw.classList.add('translated');
-        isTranslated=true;
-        demoRunning=false;
-        btn.classList.remove('active');
-        btnText.textContent=T[L]['demo.restore'];
-        btnKeys.style.display='none';
-      },300);
-    }
-    pct.textContent=Math.floor(p);
-  },200);
 }
+
+function animatePct(target,duration,done){
+  const start=performance.now();
+  function tick(t){
+    const p=Math.min(1,(t-start)/duration);
+    pct.textContent=Math.round(target*p);
+    if(p<1) requestAnimationFrame(tick); else done&&done();
+  }
+  requestAnimationFrame(tick);
+}
+
+function phaseFullScreen(){
+  currentMode='full';
+  modeFull.classList.add('active');modeRegion.classList.remove('active');
+  updateDemoLabel();
+  dw.className='demo-window';
+  setTimeout(()=>{
+    dw.classList.add('phase-toast');
+    animatePct(100,1800,()=>{
+      setTimeout(()=>{
+        dw.classList.remove('phase-toast');
+        dw.classList.add('phase-done');
+        setTimeout(phaseRegion,3200);
+      },200);
+    });
+  },800);
+}
+
+function phaseRegion(){
+  currentMode='region';
+  modeFull.classList.remove('active');modeRegion.classList.add('active');
+  updateDemoLabel();
+  dw.className='demo-window';
+  // Animate the region box growing around the "Color Theme" row
+  const target=document.getElementById('rtColor');
+  const dwRect=dw.getBoundingClientRect();
+  const trRect=target.getBoundingClientRect();
+  const left=trRect.left-dwRect.left-8;
+  const top=trRect.top-dwRect.top-6;
+  const width=trRect.width+16;
+  const height=trRect.height+12;
+  regionBox.style.left=left+'px';
+  regionBox.style.top=top+'px';
+  regionBox.style.width='0px';
+  regionBox.style.height='0px';
+  setTimeout(()=>{
+    dw.classList.add('phase-region');
+    regionBox.style.transition='width .4s, height .4s';
+    regionBox.style.width=width+'px';
+    regionBox.style.height=height+'px';
+    setTimeout(()=>{
+      // "Translating" feedback — briefly show toast
+      pct.textContent=0;
+      dw.classList.add('phase-toast');
+      animatePct(100,1000,()=>{
+        setTimeout(()=>{
+          dw.classList.remove('phase-toast');
+          dw.classList.add('phase-region-done');
+          setTimeout(()=>{
+            dw.classList.remove('phase-region','phase-region-done');
+            regionBox.style.transition='';
+            setTimeout(phaseFullScreen,800);
+          },2800);
+        },150);
+      });
+    },500);
+  },400);
+}
+
+setTimeout(phaseFullScreen,600);
 </script>
 </body>
 </html>
