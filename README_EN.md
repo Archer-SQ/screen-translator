@@ -27,7 +27,7 @@ Screen Translator lets you translate any text on your macOS screen with one keyp
 
 Two modes:
 - **Full screen** (`Shift+Z+X`) — translate the entire screen at once
-- **Region select** (`Shift+Z+C`) — Snipaste-style drag-to-select, translate only what you need
+- **Region select** (`Shift+Z+C`) — drag to select an area, translate only what you need
 
 ## Features
 
@@ -136,7 +136,7 @@ src/main/                Electron main process (TypeScript)
   providers/             google | openai | claude | deepl | ollama
   overlay.ts             Full-screen overlay window management
   region-overlay.ts      Region result overlay (draggable, resizable, multiple)
-  selection.ts           Selection drawing window (Snipaste-style frozen bg)
+  selection.ts           Selection drawing window (frozen screenshot bg)
   hotkey.ts              Native hotkey process manager
   tray.ts                System tray menu
 
