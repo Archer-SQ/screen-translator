@@ -4,7 +4,7 @@
 
 <h1 align="center">Screen Translator</h1>
 
-<p align="center"><strong>macOS 屏幕翻译工具 — 一键截屏、OCR、翻译、像素级覆盖</strong></p>
+<p align="center"><strong>macOS 屏幕翻译工具 · 全屏翻译 · 选区翻译 · 像素级原位覆盖</strong></p>
 
 <p align="center">
   <a href="https://github.com/Archer-SQ/screen-translator/releases"><img src="https://img.shields.io/github/v/release/Archer-SQ/screen-translator?style=flat&label=Release" alt="Release"></a>
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Archer-SQ/screen-translator/releases">下载</a> · 
+  <a href="https://github.com/Archer-SQ/screen-translator/releases/latest">下载</a> · 
   <a href="https://archer-sq.github.io/screen-translator/">官网</a> · 
   <a href="./README_EN.md">English</a>
 </p>
@@ -23,28 +23,49 @@
 
 ## 这是什么？
 
-Screen Translator 可以一键截取屏幕内容，通过 macOS 原生 OCR 识别文字，调用翻译 API，然后将译文直接覆盖在原文位置上 — 像素级还原，仿佛应用本身就是你的语言。
+Screen Translator 让你在 macOS 上一键翻译屏幕上的任何文字 — 网页、应用、游戏、设置、错误提示，都能直接在原位置覆盖译文，像原生汉化一样。
 
-不需要复制粘贴，不需要切换窗口。按下快捷键，直接阅读。
+两种模式：
+- **全屏翻译**（`Shift+Z+X`）— 按一下翻译整个屏幕
+- **选区翻译**（`Shift+Z+C`）— 像 Snipaste 一样拖拽框选，只翻译你关心的部分
 
 ## 特性
 
-- **一键翻译** — `Shift+Z+X` 完成截屏、识别、翻译、覆盖全流程
-- **像素级覆盖** — Canvas 直接绘制，自动匹配字号、背景色和位置
-- **开箱即用** — 内置 Google 翻译，无需 API Key
-- **多种引擎** — Google（免费）、OpenAI、Anthropic/Claude、DeepL、Ollama（本地）
-- **原生 OCR** — 基于 Apple Vision 框架，识别速度快、精度高
-- **辅助增强** — 结合 macOS Accessibility API 精确定位文字元素
-- **翻译缓存** — `Shift+S` 保存翻译结果，相同内容瞬间显示
+### 核心
+- **两种翻译模式** — 全屏一键翻译 / 选区框选翻译
+- **冻结截图** — 按下快捷键瞬间画面冻结，动态视频、游戏、动画也能精确框选
+- **像素级原位覆盖** — Canvas 直接绘制，自动匹配字号和背景色，看起来像原生汉化
+- **多屏支持** — 自动检测光标所在屏，翻译那一屏
+
+### 浮层交互
+- **任意位置可拖拽** — 不限于标题栏，整个浮层都能抓取移动
+- **8 方向边缘缩放** — 窗口边缘鼠标自动切换 resize 光标
+- **触控板双指捏合缩放** — 支持 Apple 触控板手势
+- **双击关闭** — 简洁统一
+- **常驻置顶** — 可覆盖全屏应用
+
+### OCR & 翻译
+- **2x2 象限分割 OCR** — 大屏截图切成 4 个重叠象限并行 OCR，精度更高
+- **对比度增强预处理** — Core Image 改善低对比度文字（终端、dim UI）
+- **Vision Revision 3** — 使用 macOS 最新 OCR 模型
+- **多引擎** — Google（免费）/ OpenAI / Anthropic / DeepL / Ollama
+- **翻译缓存** — `Shift+S` 手动保存，相同内容秒显
 - **自动代理** — 自动读取 macOS 系统代理设置
-- **纯托盘应用** — 常驻菜单栏，不占 Dock 位置
-- **快捷键可配** — 所有键位均可在设置中自定义
+
+### 隐私
+- 所有处理在本地完成，截图不上传
+- API 密钥仅存储在本地配置文件
 
 ## 安装
 
-### 下载安装
+### 从 Release 下载
 
-从 [Releases](https://github.com/Archer-SQ/screen-translator/releases) 下载最新版本。
+从 [Releases](https://github.com/Archer-SQ/screen-translator/releases/latest) 下载最新 DMG，双击打开后拖入 Applications。
+
+**首次打开提示「已损坏」？** 应用未经 Apple 签名，终端执行一次即可：
+```bash
+xattr -cr /Applications/Screen\ Translator.app
+```
 
 ### 从源码构建
 
@@ -55,73 +76,80 @@ npm install
 npm run dev
 ```
 
-打包为 .app：
-
+打包 .app：
 ```bash
 npx electron-builder --mac --dir
-# 输出：dist/mac-arm64/Screen Translator.app
 ```
 
 ### 系统要求
 
-- macOS 13.0+（Ventura 或更高）
-- 需要授予 **屏幕录制** 权限（用于截屏）
-- 需要授予 **辅助功能** 权限（用于全局快捷键和文字检测）
+- macOS 13.0+（Apple Silicon）
+- **屏幕录制** 权限（截图）
+- **辅助功能** 权限（全局热键、UI 元素定位）
 
-## 使用方法
-
-1. 启动应用 — 菜单栏出现 **T** 图标
-2. 按 **Shift + Z + X** 翻译当前屏幕
-3. 按 **ESC** 或点击任意位置关闭浮层
-4. 在浮层显示时按 **Shift + S** 缓存当前翻译
+## 快捷键
 
 | 快捷键 | 功能 |
 |--------|------|
-| `Shift + Z + X` | 截屏翻译 |
+| `Shift + Z + X` | 全屏翻译 |
+| `Shift + Z + C` | 选区翻译 |
 | `ESC` | 关闭浮层 / 取消翻译 |
-| `Shift + S` | 缓存当前翻译 |
+| `Shift + S` | 保存当前翻译到缓存 |
 
-所有快捷键均可在设置中修改。
+所有快捷键可在设置页面自定义。
 
 ## 翻译服务
 
-| 服务 | 需要 API Key | 说明 |
+| 服务 | API Key | 说明 |
 |------|:---:|------|
-| **Google 翻译** | 否 | 免费内置，自动检测系统代理 |
-| **OpenAI 兼容** | 是 | 支持 GPT-4o-mini，可自定义端点 |
+| **Google 翻译** | 否 | 免费内置，自动代理 |
+| **OpenAI 兼容** | 是 | GPT-4o-mini，支持自定义端点 |
 | **Anthropic 兼容** | 是 | Claude、MiniMax 等 |
-| **DeepL** | 是 | 欧洲语言翻译质量极高 |
-| **Ollama** | 否 | 本地模型，完全离线运行 |
+| **DeepL** | 是 | 欧洲语言高质量 |
+| **Ollama** | 否 | 本地模型，完全离线 |
 
 ## 工作原理
 
 ```
-Shift+Z+X → 截屏 → OCR + AX 并行识别 → 过滤 → 分批翻译 → Canvas 绘制覆盖
+快捷键 → 截屏 → OCR + AX 并行识别 → 过滤 → 分批翻译 → Canvas 绘制覆盖
 ```
 
-- **坐标系统**：OCR 返回物理像素，AX 返回逻辑像素，主进程统一归一化
-- **字号匹配**：用 `measureText()` 反推原始字号
-- **背景采样**：文字周围 14 点采样取中位数
-- **原生热键**：通过 `CGEventTap` 监听，绕过安全软件对 Electron 的拦截
+**全屏翻译**：截整屏 → 2x2 象限分割 OCR → 合并去重 → 按行翻译 → 覆盖层渲染
+
+**选区翻译**：先冻结整屏截图 → 弹出半透明选框 → 用户拖拽 → 裁剪截图 → OCR → 翻译 → 可拖拽可缩放的独立结果窗口
+
+**关键技术**：
+- macOS Vision framework OCR（zh-Hans / zh-Hant / ja / ko / en 等）
+- 原生 CGEventTap 全局热键监听
+- Canvas 直接绘制（自动字号反推、背景色采样、译文覆盖）
+- Accessibility API 精确定位（配合 OCR 提升坐标精度）
 
 ## 项目结构
 
 ```
-src/main/            主进程（TypeScript）
-  index.ts           翻译流程编排
-  providers/         翻译服务：google | openai | claude | deepl | ollama
-  overlay.ts         覆盖层窗口管理
-  hotkey.ts          原生热键进程管理
-  ocr.ts / accessibility.ts  文字识别
+src/main/                主进程（TypeScript）
+  index.ts               翻译流程编排
+  screenshot.ts          区域截图（screencapture -R）
+  ocr.ts                 调用 OCR 二进制 + 2x2 象限分割
+  accessibility.ts       AX API 包装
+  translator.ts          翻译服务调度
+  providers/             google | openai | claude | deepl | ollama
+  overlay.ts             全屏覆盖层窗口管理
+  region-overlay.ts      选区结果浮层管理（可拖拽可缩放，可多开）
+  selection.ts           选区绘制窗口（Snipaste 式冻结背景）
+  hotkey.ts              原生热键进程管理
+  tray.ts                系统托盘菜单
 
-src/renderer/        渲染层（HTML/JS）
-  overlay.html/js    Canvas 绘制翻译覆盖
-  settings.html/js   设置界面（中英双语）
+src/renderer/            渲染层（纯 HTML/JS）
+  overlay.html/js        Canvas 绘制全屏覆盖层
+  region-overlay.html/js 选区结果浮层
+  selection.html/js      选区框选 UI
+  settings.html/js       设置页面（中英双语）
 
-scripts/             原生 macOS 工具（Objective-C）
-  ocr-macos.m        Vision 框架 OCR
-  hotkey-macos.m     CGEventTap 全局热键
-  axtext-macos.m     Accessibility API 文字读取
+scripts/                 原生 macOS 工具（Objective-C）
+  ocr-macos.m            Vision OCR + Core Image 对比度增强
+  hotkey-macos.m         CGEventTap 全局热键
+  axtext-macos.m         Accessibility 文字读取
 ```
 
 ## 开源协议
@@ -132,3 +160,4 @@ MIT
 
 - [google-translate-api-x](https://github.com/AidanWelch/google-translate-api) — 免费 Google 翻译
 - [Electron](https://www.electronjs.org/) — 桌面应用框架
+- Apple Vision Framework — 原生 OCR

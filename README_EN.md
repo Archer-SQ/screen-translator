@@ -4,7 +4,7 @@
 
 <h1 align="center">Screen Translator</h1>
 
-<p align="center"><strong>Instant screen translation overlay for macOS</strong></p>
+<p align="center"><strong>macOS screen translation · Full screen · Region select · Pixel-perfect overlay</strong></p>
 
 <p align="center">
   <a href="https://github.com/Archer-SQ/screen-translator/releases"><img src="https://img.shields.io/github/v/release/Archer-SQ/screen-translator?style=flat&label=Release" alt="Release"></a>
@@ -14,39 +14,60 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Archer-SQ/screen-translator/releases">Download</a> · 
+  <a href="https://github.com/Archer-SQ/screen-translator/releases/latest">Download</a> · 
   <a href="https://archer-sq.github.io/screen-translator/">Website</a> · 
   <a href="./README.md">中文</a>
 </p>
 
 ---
 
-## What is Screen Translator?
+## What is this?
 
-Screen Translator captures your screen, detects text via macOS native OCR, translates it through your preferred service, and overlays the translated text directly on top of the original — pixel-perfect, as if the app was natively localized.
+Screen Translator lets you translate any text on your macOS screen with one keypress — web pages, apps, games, settings, error messages. Translations are rendered in place, pixel-perfect, as if the app was natively localized.
 
-No copy-pasting. No switching windows. Just press a hotkey and read.
+Two modes:
+- **Full screen** (`Shift+Z+X`) — translate the entire screen at once
+- **Region select** (`Shift+Z+C`) — Snipaste-style drag-to-select, translate only what you need
 
 ## Features
 
-- **One-Key Translation** — `Shift+Z+X` to capture, OCR, translate, and overlay in one step
-- **Pixel-Perfect Overlay** — Canvas-based rendering matches original font size, background color, and position
-- **Free by Default** — Google Translate built-in, no API key required
-- **Multiple Providers** — Google (free), OpenAI, Anthropic/Claude, DeepL, Ollama (local)
-- **Native macOS OCR** — Apple Vision framework for fast, accurate text detection
-- **Accessibility Enhanced** — Combines OCR with Accessibility API for precise positioning
-- **Translation Cache** — Save translations with `Shift+S` for instant re-display
-- **Auto Proxy Detection** — Reads macOS system proxy settings automatically
-- **Pure Tray App** — Lives in your menu bar, no dock icon
-- **Configurable Hotkeys** — Customize all shortcuts in Settings
+### Core
+- **Two translation modes** — full-screen one-shot or region drag-select
+- **Freeze frame** — screen freezes the moment you hit the hotkey, works on videos, games, animations
+- **Pixel-perfect in-place overlay** — Canvas-rendered, matches original font size and background color
+- **Multi-display** — automatically detects cursor display, translates that screen
+
+### Overlay interactions
+- **Drag from anywhere** — not limited to titlebar, grab the whole overlay to move
+- **8-direction edge resize** — cursor auto-switches on edge hover
+- **Trackpad pinch-to-zoom** — Apple gesture support
+- **Double-click to close** — clean unified behavior
+- **Always on top** — covers fullscreen apps
+
+### OCR & Translation
+- **2x2 quadrant OCR** — large screens split into 4 overlapping quadrants, parallel OCR for better accuracy
+- **Contrast enhancement** — Core Image preprocessing for low-contrast text (terminals, dim UIs)
+- **Vision Revision 3** — uses latest macOS OCR model
+- **Multiple engines** — Google (free) / OpenAI / Anthropic / DeepL / Ollama
+- **Translation cache** — `Shift+S` to save, instant redisplay on same content
+- **Auto proxy** — reads macOS system proxy settings
+
+### Privacy
+- Everything runs locally, screenshots never leave your device
+- API keys stored only in local config
 
 ## Installation
 
 ### Download
 
-Download the latest release from [Releases](https://github.com/Archer-SQ/screen-translator/releases).
+Get the latest DMG from [Releases](https://github.com/Archer-SQ/screen-translator/releases/latest), open it and drag to Applications.
 
-### Build from Source
+**"Damaged" warning on first open?** The app is unsigned — run once in Terminal:
+```bash
+xattr -cr /Applications/Screen\ Translator.app
+```
+
+### Build from source
 
 ```bash
 git clone https://github.com/Archer-SQ/screen-translator.git
@@ -56,30 +77,24 @@ npm run dev
 ```
 
 Package as .app:
-
 ```bash
 npx electron-builder --mac --dir
-# Output: dist/mac-arm64/Screen Translator.app
 ```
 
 ### Requirements
 
-- macOS 13.0+ (Ventura or later)
-- **Screen Recording** permission (for screenshot capture)
-- **Accessibility** permission (for global hotkeys and text detection)
+- macOS 13.0+ (Apple Silicon)
+- **Screen Recording** permission
+- **Accessibility** permission
 
-## Usage
-
-1. Launch the app — a **T** icon appears in your menu bar
-2. Press **Shift + Z + X** to translate your screen
-3. Press **ESC** or click anywhere to dismiss the overlay
-4. Press **Shift + S** while overlay is visible to cache the translation
+## Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `Shift + Z + X` | Capture & translate |
-| `ESC` | Dismiss overlay / Cancel |
-| `Shift + S` | Cache translation |
+| `Shift + Z + X` | Full screen translate |
+| `Shift + Z + C` | Region translate |
+| `ESC` | Dismiss overlay / cancel |
+| `Shift + S` | Save current translation to cache |
 
 All shortcuts are customizable in Settings.
 
@@ -87,7 +102,7 @@ All shortcuts are customizable in Settings.
 
 | Provider | API Key | Notes |
 |----------|:---:|-------|
-| **Google Translate** | No | Free, auto-detects system proxy |
+| **Google** | No | Built-in free, auto proxy |
 | **OpenAI Compatible** | Yes | GPT-4o-mini, custom endpoint |
 | **Anthropic Compatible** | Yes | Claude, MiniMax, etc. |
 | **DeepL** | Yes | Premium European languages |
@@ -96,32 +111,45 @@ All shortcuts are customizable in Settings.
 ## How It Works
 
 ```
-Hotkey → Screenshot → OCR + AX parallel → Filter → Batch translate → Canvas overlay
+Hotkey → Capture → OCR + AX parallel → Filter → Batch translate → Canvas overlay
 ```
 
-- **Coordinates**: OCR returns physical pixels, AX returns logical pixels, normalized in main process
-- **Font Matching**: Original font size reverse-engineered via `measureText()`
-- **Background Sampling**: 14-point median sampling around text blocks
-- **Native Hotkeys**: `CGEventTap` bypasses security software blocking Electron's `globalShortcut`
+**Full screen**: capture full display → 2x2 quadrant OCR → dedupe → batch translate → render overlay
+
+**Region**: freeze full display screenshot → show selection UI → user drags → crop → OCR → translate → draggable resizable result window
+
+**Key tech**:
+- macOS Vision framework OCR (zh-Hans / zh-Hant / ja / ko / en, etc.)
+- Native CGEventTap global hotkeys
+- Canvas direct drawing (font-size reverse inference, background sampling, overlay)
+- Accessibility API for precise text positioning
 
 ## Project Structure
 
 ```
-src/main/            Main process (TypeScript)
-  index.ts           Translation flow orchestration
-  providers/         google | openai | claude | deepl | ollama
-  overlay.ts         Overlay window management
-  hotkey.ts          Native hotkey process manager
-  ocr.ts / accessibility.ts  Text detection
+src/main/                Electron main process (TypeScript)
+  index.ts               Translation flow orchestration
+  screenshot.ts          Region screenshot (screencapture -R)
+  ocr.ts                 OCR binary caller + 2x2 quadrant split
+  accessibility.ts       AX API wrapper
+  translator.ts          Translation service dispatcher
+  providers/             google | openai | claude | deepl | ollama
+  overlay.ts             Full-screen overlay window management
+  region-overlay.ts      Region result overlay (draggable, resizable, multiple)
+  selection.ts           Selection drawing window (Snipaste-style frozen bg)
+  hotkey.ts              Native hotkey process manager
+  tray.ts                System tray menu
 
-src/renderer/        Renderer (plain HTML/JS)
-  overlay.html/js    Canvas-based translation overlay
-  settings.html/js   Settings UI (CN/EN)
+src/renderer/            Renderer layer (plain HTML/JS)
+  overlay.html/js        Canvas-drawn full-screen overlay
+  region-overlay.html/js Region result overlay
+  selection.html/js      Region selection UI
+  settings.html/js       Settings page (CN/EN bilingual)
 
-scripts/             Native macOS tools (Objective-C)
-  ocr-macos.m        Vision framework OCR
-  hotkey-macos.m     CGEventTap global hotkeys
-  axtext-macos.m     Accessibility API text reader
+scripts/                 Native macOS tools (Objective-C)
+  ocr-macos.m            Vision OCR + Core Image contrast enhancement
+  hotkey-macos.m         CGEventTap global hotkeys
+  axtext-macos.m         Accessibility text reader
 ```
 
 ## License
@@ -132,3 +160,4 @@ MIT
 
 - [google-translate-api-x](https://github.com/AidanWelch/google-translate-api) — Free Google Translate
 - [Electron](https://www.electronjs.org/) — Desktop framework
+- Apple Vision Framework — Native OCR
