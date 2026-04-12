@@ -7,16 +7,18 @@ import { getConfig } from './config';
 import { ensureOverlayWindow, showOverlay, hideOverlay, isOverlayVisible, showLoading, hideLoading, showCancelled, setDismissCallback } from './overlay';
 import { createTray, openSettings, setTranslateCallback, setHideCallback, setClearCacheCallback, setOverlayVisibleFn, updateTrayMenu } from './tray';
 import { startHotkeyMonitor, stopHotkeyMonitor, restartWithHotkeys, sendHotkeyState } from './hotkey';
-import { showSelection } from './selection';
-import { showRegionOverlay } from './region-overlay';
+import { showSelection, cancelSelection, isSelectionActive } from './selection';
+import { showRegionOverlay, closeAllRegionOverlays } from './region-overlay';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 
 let isProcessing = false;
+let isRegionProcessing = false;
 let isCancelled = false;
 let lastTriggerTime = 0;
+let lastRegionTriggerTime = 0;
 let activeProgressTimer: ReturnType<typeof setInterval> | null = null;
-const DEBOUNCE_MS = 1500;
+const DEBOUNCE_MS = 2000;
 
 // Tray app: don't quit when all windows are closed
 app.on('window-all-closed', () => {
@@ -39,7 +41,7 @@ function toggleTranslate() {
     return;
   }
   const now = Date.now();
-  if (isProcessing || now - lastTriggerTime < DEBOUNCE_MS) return;
+  if (isProcessing || isRegionProcessing || now - lastTriggerTime < DEBOUNCE_MS) return;
   lastTriggerTime = now;
   handleTranslate();
 }
@@ -95,7 +97,7 @@ app.whenReady().then(() => {
   setTimeout(() => openSettings(), 500);
   setTranslateCallback(() => {
     const now = Date.now();
-    if (isProcessing || isOverlayVisible() || now - lastTriggerTime < DEBOUNCE_MS) return;
+    if (isProcessing || isRegionProcessing || isOverlayVisible() || now - lastTriggerTime < DEBOUNCE_MS) return;
     lastTriggerTime = now;
     handleTranslate().then(() => updateTrayMenu());
   });
@@ -115,14 +117,16 @@ app.whenReady().then(() => {
   startHotkeyMonitor(
     // onTrigger
     () => { toggleTranslate(); },
-    // onDismiss — overlay visible: close it
+    // onDismiss — overlay visible: close it; also cancel any in-progress selection
     () => {
+      cancelSelection();
       if (isOverlayVisible()) {
         hideOverlay();
         sendHotkeyState('HIDDEN');
         pendingCacheKey = null;
         pendingCacheBlocks = null;
         isProcessing = false;
+        isRegionProcessing = false;
         updateTrayMenu();
       }
     },
@@ -146,18 +150,32 @@ app.whenReady().then(() => {
     },
     // onCancel — ESC or re-trigger during translating
     () => {
+      cancelSelection();
       if (isProcessing) {
         isCancelled = true;
         if (activeProgressTimer) { clearInterval(activeProgressTimer); activeProgressTimer = null; }
         showCancelled();
         isProcessing = false;
+        isRegionProcessing = false;
         sendHotkeyState('HIDDEN');
         updateTrayMenu();
       }
+      if (isRegionProcessing) {
+        isRegionProcessing = false;
+        hideLoading();
+      }
     },
-    // onRegion — region translate
+    // onRegion — toggle: if selection is open, close it; otherwise start region translate
     () => {
-      if (isProcessing || isOverlayVisible()) return;
+      // Already in selection mode — close it (toggle off)
+      if (isSelectionActive()) {
+        cancelSelection();
+        isRegionProcessing = false;
+        return;
+      }
+      const now = Date.now();
+      if (isProcessing || isRegionProcessing || now - lastRegionTriggerTime < DEBOUNCE_MS) return;
+      lastRegionTriggerTime = now;
       handleRegionTranslate();
     },
     {
@@ -439,11 +457,11 @@ function textSimilarity(a: string, b: string): number {
 
 async function handleRegionTranslate() {
   const config = getConfig();
+  isRegionProcessing = true;
   try {
     const selection = await showSelection();
-    if (!selection) return; // user cancelled
+    if (!selection) { isRegionProcessing = false; return; } // user cancelled
 
-    isProcessing = true;
     isCancelled = false;
     showLoading('Translating... 20%');
 
@@ -510,13 +528,13 @@ async function handleRegionTranslate() {
       regionWidth: selection.width,
       regionHeight: selection.height,
     });
-    isProcessing = false;
   } catch (err: any) {
     console.error('[region] Translation failed:', err);
     const msg = err?.message || String(err);
     showLoading(`Error: ${msg.slice(0, 80)}`);
     setTimeout(() => hideLoading(), 3000);
-    isProcessing = false;
+  } finally {
+    isRegionProcessing = false;
   }
 }
 
