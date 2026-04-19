@@ -1,6 +1,6 @@
 {
   "name": "screen-translator",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Screenshot, OCR, translate, and overlay — seamless screen translation tool",
   "main": "dist/main/index.js",
   "scripts": {

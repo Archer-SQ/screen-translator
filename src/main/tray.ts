@@ -68,9 +68,11 @@ export function updateTrayMenu() {
   if (!tray) return;
   const overlayVisible = isOverlayVisibleFn ? isOverlayVisibleFn() : false;
 
+  const emptyIcon = nativeImage.createEmpty();
   const contextMenu = Menu.buildFromTemplate([
     {
       label: 'Translate',
+      icon: emptyIcon,
       enabled: !overlayVisible,
       click: () => {
         if (onTranslateCallback) onTranslateCallback();
@@ -79,6 +81,7 @@ export function updateTrayMenu() {
     },
     {
       label: 'Hide',
+      icon: emptyIcon,
       enabled: overlayVisible,
       click: () => {
         if (onHideCallback) onHideCallback();
@@ -88,17 +91,20 @@ export function updateTrayMenu() {
     { type: 'separator' },
     {
       label: 'Clear Cache',
+      icon: emptyIcon,
       click: () => {
         if (onClearCacheCallback) onClearCacheCallback();
       },
     },
     {
       label: 'Settings',
+      icon: emptyIcon,
       click: openSettings,
     },
     {
       label: 'Quit',
-      role: 'quit',
+      icon: emptyIcon,
+      click: () => { app.quit(); },
     },
   ]);
   tray.setContextMenu(contextMenu);
