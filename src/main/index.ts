@@ -366,15 +366,41 @@ function refineWithAccessibility(
   scaleFactor: number,
   displayOffset: { x: number; y: number } = { x: 0, y: 0 }
 ): TextBlock[] {
+  // Strip SF Symbols / Private Use Area chars (macOS system icons rendered as glyphs)
+  // U+E000-U+F8FF (BMP PUA) and U+F0000-U+10FFFD (supplementary PUAs)
+  const stripIconChars = (s: string): string => {
+    return s
+      .replace(/[\uE000-\uF8FF]/g, '')
+      .replace(/[\uDB80-\uDBFF][\uDC00-\uDFFF]/g, '') // surrogate pairs in PUA-A/B
+      .replace(/^[\s\-_·•●○◆★☆▶◀▲▼■□+<>←→×✕✓✗]+/, '') // leading icon-like symbols
+      .trim();
+  };
+
   // Filter garbled OCR blocks (icons misread as text)
-  const cleanOcr = ocrBlocks.filter(ocr => {
-    const text = ocr.text.trim();
-    // Skip icon-shaped blocks (small + square)
+  const cleanOcr = ocrBlocks.flatMap(ocr => {
+    let text = ocr.text.trim();
+
+    // Reject icon-shaped blocks (small + square OR small + thin)
     const r = ocr.width / Math.max(ocr.height, 1);
-    if (ocr.width < 40 * scaleFactor && ocr.height < 40 * scaleFactor && r > 0.5 && r < 2.0) return false;
-    // Skip garbled short text with mixed symbols (icon+text merge artifacts)
-    if (text.length <= 4 && /[+<>←→×✕✓✗■□●○◆★☆▶◀▲▼]/.test(text)) return false;
-    return true;
+    const isSmall = ocr.width < 50 * scaleFactor && ocr.height < 50 * scaleFactor;
+    if (isSmall && r > 0.4 && r < 2.5) return []; // square-ish icon
+    if (ocr.width < 30 * scaleFactor && ocr.height < 30 * scaleFactor) return []; // tiny
+
+    // Has SF Symbols PUA chars → likely icon glyph mixed with text
+    const hasPUA = /[\uE000-\uF8FF]/.test(text);
+    if (hasPUA) {
+      text = stripIconChars(text);
+      if (text.length < 2) return []; // pure icon
+    }
+
+    // Garbled short text with icon-like symbols
+    if (text.length <= 4 && /[+<>←→×✕✓✗■□●○◆★☆▶◀▲▼]/.test(text)) return [];
+
+    // Strip leading icon symbols even on long text (e.g. "▶ Settings")
+    const stripped = stripIconChars(text);
+    if (stripped !== text && stripped.length >= 2) text = stripped;
+
+    return [{ ...ocr, text }];
   });
 
   if (axBlocks.length === 0) return cleanOcr;

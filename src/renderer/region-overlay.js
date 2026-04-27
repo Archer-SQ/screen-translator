@@ -19,18 +19,24 @@ window.api.onShowTranslation((data) => {
     const scaleX = img.width / regionWidth;
     const scaleY = img.height / regionHeight;
 
-    blocks.forEach(block => {
-      const x = Math.round(block.x * scaleX);
-      const y = Math.round(block.y * scaleY);
-      const w = Math.round(block.width * scaleX);
-      const h = Math.round(block.height * scaleY);
+    const px = blocks.map(b => ({
+      block: b,
+      x: Math.round(b.x * scaleX),
+      y: Math.round(b.y * scaleY),
+      w: Math.round(b.width * scaleX),
+      h: Math.round(b.height * scaleY),
+    }));
+    const rowMetrics = clusterRowsAndGetHeights(px);
 
-      const isBold = h > 44;
+    px.forEach((p, i) => {
+      const { block, x, y, w, h } = p;
+      const { rowH, rowCenter } = rowMetrics[i];
+
+      const isBold = rowH > 44;
       const weight = isBold ? 'bold' : 'normal';
       const fontFamily = '-apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif';
 
-      const heightBased = Math.round(h * 0.75);
-      let fontSize = heightBased;
+      let fontSize = Math.round(rowH * 0.75);
       const minFontSize = Math.max(10, Math.floor(fontSize * 0.6));
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       while (fontSize > minFontSize && ctx.measureText(block.translated).width > w) {
@@ -38,24 +44,49 @@ window.api.onShowTranslation((data) => {
         ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       }
 
-      // Erase original text with sampled background color
       const bgColor = sampleEdgeColor(cleanCtx, x, y, w, h);
       const pad = 2;
       ctx.fillStyle = `rgb(${bgColor.r},${bgColor.g},${bgColor.b})`;
       ctx.fillRect(x - pad, y - pad, w + pad * 2, h + pad * 2);
 
-      // Draw translated text
       const textColor = bgColor.brightness > 128
         ? (bgColor.brightness > 200 ? '#1a1a1a' : '#000000')
         : (bgColor.brightness < 50 ? '#e0e0e0' : '#ffffff');
       ctx.fillStyle = textColor;
       ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
       ctx.textBaseline = 'middle';
-      ctx.fillText(block.translated, x, y + h / 2, w);
+      ctx.fillText(block.translated, x, rowCenter, w);
     });
   };
   img.src = screenshotDataUrl;
 });
+
+// Cluster blocks into rows by vertical-center alignment.
+// Same-row blocks share font height + vertical center for visual consistency.
+function clusterRowsAndGetHeights(items) {
+  if (items.length === 0) return [];
+  const sorted = items.map((it, idx) => ({ it, idx, center: it.y + it.h / 2 }))
+                       .sort((a, b) => a.center - b.center);
+  const result = new Array(items.length);
+  let i = 0;
+  while (i < sorted.length) {
+    const startCenter = sorted[i].center;
+    const startH = sorted[i].it.h;
+    const tolerance = startH * 0.4;
+    let j = i;
+    let maxH = startH;
+    let centerSum = 0;
+    while (j < sorted.length && sorted[j].center - startCenter < tolerance) {
+      maxH = Math.max(maxH, sorted[j].it.h);
+      centerSum += sorted[j].center;
+      j++;
+    }
+    const rowCenter = centerSum / (j - i);
+    for (let k = i; k < j; k++) result[sorted[k].idx] = { rowH: maxH, rowCenter };
+    i = j;
+  }
+  return result;
+}
 
 function sampleEdgeColor(cleanCtx, x, y, w, h) {
   const m = 4;

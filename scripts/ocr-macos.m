@@ -41,7 +41,15 @@ int main(int argc, const char *argv[]) {
         [contrast setValue:@(1.3) forKey:@"inputContrast"]; // 1.0 = no change
         [contrast setValue:@(0.0) forKey:@"inputBrightness"];
         [contrast setValue:@(0.0) forKey:@"inputSaturation"]; // grayscale helps OCR
-        CIImage *enhanced = [contrast outputImage];
+        CIImage *contrastOut = [contrast outputImage];
+
+        // Sharpen — significantly improves small text recognition
+        CIFilter *sharpen = [CIFilter filterWithName:@"CIUnsharpMask"];
+        [sharpen setValue:contrastOut forKey:kCIInputImageKey];
+        [sharpen setValue:@(2.5) forKey:@"inputRadius"];
+        [sharpen setValue:@(0.6) forKey:@"inputIntensity"];
+        CIImage *enhanced = [sharpen outputImage];
+        if (!enhanced) enhanced = contrastOut;
 
         CIContext *ciCtx = [CIContext contextWithOptions:nil];
         CGImageRef ocrImage = [ciCtx createCGImage:enhanced fromRect:enhanced.extent];
